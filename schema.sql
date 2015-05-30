@@ -7,7 +7,7 @@ CREATE TABLE PowerUsage(
 	meterGauge smallint NOT NULL DEFAULT 0,
 	solarGauge smallint NOT NULL DEFAULT 0,
 	usageGauge smallint NOT NULL DEFAULT 0,
-  outsideTemperature tinyint DEFAULT NULL,
+  outsideTemperature decimal(4,2) DEFAULT NULL,
 	PRIMARY KEY (logDate)
 ) ENGINE='TokuDB';
 
