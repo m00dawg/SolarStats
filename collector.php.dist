@@ -1,0 +1,24 @@
+#!/usr/bin/php
+<?php
+
+    $dbHost = 'localhost';
+    $dbUser = 'solarcollector';
+    $dbPassword = 'password';
+    $db = 'solar';
+
+    $m = new Memcached();
+    $m->addServer('localhost', 11211);
+
+    $mysqli = new MySQLi($dbHost, $dbUser, $dbPassword, $db)
+        or die($mysql->error);
+
+    $power = simplexml_load_file('http://solar.moocow.home/cgi-bin/egauge?inst');
+    $temperature = 
+    $mysqli->query("SET SQL_MODE='TRADITIONAL'");
+    $stmt = $mysqli->prepare("INSERT INTO PowerUsage (meterCounter, solarCounter, outsideTemperature) VALUES (?, ?, ?)")
+        or die($stmt->error);
+    $stmt->bind_param('iid', $power->r[0]->v, $power->r[1]->v, $m->get('SolarStats:outsideTemperature'));
+    $stmt->execute();
+    $stmt->close();
+    $mysqli->close();
+?>
