@@ -1,11 +1,9 @@
 #!/usr/bin/php
 <?php
-
     $m = new Memcached();
     $m->addServer('localhost', 11211);
-    if($m->get('SolarStats:outsideTemperature'))
+    $outsideTemp = 'U';
+    if($m->get('SolarStats:outsideTemperatureBad'))
         $outsideTemp = $m->get('SolarStats:outsideTemperature');
-    else
-        $outsideTemp = 'U';
     echo "OutsideTemperature:$outsideTemp";
 ?>
