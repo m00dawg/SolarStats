@@ -11,6 +11,8 @@ CREATE TABLE PowerUsage(
 	PRIMARY KEY (logDate)
 ) ENGINE='TokuDB';
 
+INSERT INTO PowerUsage VALUES (NOW(), 0, 0, 0, 0, 0, NULL);
+
 DROP TRIGGER IF EXISTS CalcPowerUsageGauges;
 
 DELIMITER //
