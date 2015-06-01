@@ -1,14 +1,15 @@
 # myapp.rb
 require 'sinatra'
+require 'dalli'
 
-#get '/' do
-#  'Hello world!'
-#end
+options = { :namespace => "SolarStats", :compress => true, :expires_in => 300}
+dc = Dalli::Client.new('localhost:11211', options)
 
-post '/temp:location' do
-    'Set temp'
+patch '/temp/:location' do
+    dc.set("temp:#{params['location']}", request.body.read)
 end
 
-get '/temp:location' do
-    'Get temp'
+get '/temp/:location' do
+    value = dc.get("temp:#{params['location']}")
+    return value
 end
