@@ -1,0 +1,7 @@
+<?php
+    $egaugeHost = 'solar.example.com';
+    $dbHost = 'localhost';
+    $dbUser = 'solarcollector';
+    $dbPassword = 'password';
+    $db = 'solar';
+?>
