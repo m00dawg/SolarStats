@@ -1,7 +1,11 @@
 <?php
-    $egaugeHost = 'solar.example.com';
-    $dbHost = 'localhost';
-    $dbUser = 'solarcollector';
-    $dbPassword = 'password';
-    $db = 'solar';
+$egaugeHost = 'solar.example.com';
+
+$dbHost = 'localhost';
+$dbUser = 'solarcollector';
+$dbPassword = 'password';
+$db = 'solar';
+
+$memcachedHost = 'localhost';
+$memcachedPort = 11211;
 ?>
