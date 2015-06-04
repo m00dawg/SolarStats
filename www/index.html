@@ -21,7 +21,14 @@
   <div class="row">
     <br />
     <h1 class="page-header">Solar vs Grid Usage</h1>
-    <canvas id="solarVsGridPie" width="100" height="25"></canvas>
+    <div class="col-md-8">
+        <h2>Overall</h2>
+        <canvas id="solarVsGridPie" width="50" height="25"></canvas>
+    </div>
+    <div class="col-md-4">
+        <h2>Today</h2>
+    </div>
+
   </div>
 
   <div class="row">
@@ -49,8 +56,6 @@
 <script src="bootstrap/js/bootstrap.min.js"></script>
 
 <script>
-
-
   jQuery.ajax({
       type: "GET",
       url: "http://solarstats.moocow.home/api/UsageByDay",
@@ -101,12 +106,14 @@
          solarKWH.push(this.SolarKWH);
          avgTemp.push(this.AvgTemp);
 
-         totalGridKWH = totalGridKWH + this.GridKWH;
-         totalSolarKWH = totalSolarKWH + this.SolarKWH;
+         totalGridKWH = totalGridKWH + parseInt(this.GridKWH);
+         totalSolarKWH = totalSolarKWH + parseInt(this.SolarKWH);
       });
+        console.log(totalGridKWH);
       drawSolarVsGridPie(totalGridKWH, totalSolarKWH);
       drawDailyUsageGraph(day, usedKWH, solarKWH);
     }
+
   }
 
   function displayAverageUsageByHour(data, status, jqXHR)
@@ -192,14 +199,14 @@
     var solarVsGridData = [
       {
         value: totalGridKWH,
-        color:"#AA0000",
-        highlight: "#FF0000",
-        label: "Grd"
+        color: "rgba(0,0,250,0.5)",
+        highlight: "rgba(0, 0, 255, 0.75)",
+        label: "Grid"
       },
       {
         value: totalSolarKWH,
-        color: "#00AA00",
-        highlight: "#00FF00",
+        color: "rgba(0,250,0,0.5)",
+        highlight: "rgba(0, 255, 0, 0.75)",
         label: "Solar"
       }
     ];
