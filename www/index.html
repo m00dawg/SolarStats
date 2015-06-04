@@ -19,32 +19,29 @@
 
 <div class="container">
   <div class="row">
-
-  <br />
-  <h1 class="page-header">Solar vs Grid Usage</h1>
-  <canvas id="solarVsGridPie" width="100" height="25"></canvas>
-
-
-  <h1 class="page-header">Average Hourly Usage</h1>
-  <canvas id="averageHourlyUsageGraph" width="100" height="25"></canvas>
-  <br />
-  <br />
-  <table class="table table-striped table-bordered" id="averageHourlyUsage">
-      <tr><th>Day</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Average Temp</th></tr>
-  </table>
+    <br />
+    <h1 class="page-header">Solar vs Grid Usage</h1>
+    <canvas id="solarVsGridPie" width="100" height="25"></canvas>
   </div>
 
-  <br />
-  <h1 class="page-header">Daily Usage</h1>
-  <canvas id="dailyUsageGraph" width="100" height="25"></canvas>
-  <br />
-  <br />
-  <table class="table table-striped table-bordered" id="dailyUsage">
-      <tr><th>Hour</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Average Temp</th></tr>
-  </table>
+  <div class="row">
+    <h1 class="page-header">Average Hourly Usage</h1>
+    <canvas id="averageHourlyUsageGraph" width="100" height="25"></canvas>
+    <br />
+    <br />
+    <table class="table table-striped table-bordered" id="averageHourlyUsage">
+        <tr><th>Day</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Average Temp</th></tr>
+    </table>
+
+    <br />
+    <h1 class="page-header">Daily Usage</h1>
+    <canvas id="dailyUsageGraph" width="100" height="25"></canvas>
+    <br />
+    <br />
+    <table class="table table-striped table-bordered" id="dailyUsage">
+        <tr><th>Hour</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Average Temp</th></tr>
+    </table>
   </div>
-
-
 </div>
 
 <script src="js/jquery-2.1.4.min.js"></script>
@@ -207,7 +204,7 @@
       }
     ];
 
-    dailyUsageChart = new Chart(solarVsGridPie).Pie(solarVsGridData);
+    solarVsGridPieChart = new Chart(solarVsGridPie).Pie(solarVsGridData);
   };
 
   function drawAverageHourlyUsageGraph(hour, usedKWH, solarKWH)
