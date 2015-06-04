@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bootstrap 101 Template</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Bootstrap -->
+<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+</head>
+
+<body>
+<h1>Hello, world!</h1>
+
+<canvas id="dailyUsageGraph" width="400" height="400"></canvas>
+
+<table id="dailyUsage"></table>
+
+
+<script src="js/jquery-2.1.4.min.js"></script>
+<script src="js/Chart.min.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
+
+<script>
+
+  jQuery.ajax({
+      type: "GET",
+      url: "http://solarapi.moocow.home/UsageByDay",
+      contentType: "application/json",
+      dataType: "json",
+      success: displayUsageByDay,
+      //error: errorCallback
+  });
+
+  function displayUsageByDay(data, status, jqXHR)
+  {
+    if(data.length == 0)
+      $("#dailyUsage").append("<tr><td colspan='4'>No Data Found</td></tr>");
+    else
+    {
+      $.each(data, function()
+      {
+        $("#dailyUsage").append(
+          "<tr><td>" + this.Day +
+          "</td><td>" + this.UsedKWH +
+          "</td><td>" + this.GridKWH +
+          "</td><td>" + this.SolarKWH +
+          "</td><td>" + this.AvgTemp +
+         "</td></tr>");
+      });
+    }
+  }
+
+  (function()
+  {
+    Chart.defaults.global.responsive = true;
+    Chart.defaults.global.maintainAspectRatio = true;
+    Chart.defaults.global.tooltipTitleFontSize = 14;
+    Chart.defaults.global.tooltipFontSize = 12;
+    Chart.defaults.global.scaleFontColor = "#eeeeff";
+    Chart.defaults.global.scaleLineColor = "#ddddff";
+    Chart.defaults.global.scaleGridLineColor = "#ccccff";
+
+    var logDate;
+    var usedKWH;
+    var solarKWH;
+
+
+
+    var dailyUsageGraph = document.getElementById('dailyUsageGraph').getContext('2d');
+    var dailyUsageData = {
+      labels: [],
+      datasets: [
+          {
+              label: "Used kWH",
+              fillColor: "rgba(220,220,220,0.5)",
+              strokeColor: "rgba(220,220,220,0.8)",
+              highlightFill: "rgba(220,220,220,0.75)",
+              highlightStroke: "rgba(220,220,220,1)",
+              data: []
+          },
+          {
+              label: "Solar kWH",
+              fillColor: "rgba(151,187,205,0.5)",
+              strokeColor: "rgba(151,187,205,0.8)",
+              highlightFill: "rgba(151,187,205,0.75)",
+              highlightStroke: "rgba(151,187,205,1)",
+              data: []
+          }
+      ]
+    };
+
+    dailyUsageChart = new Chart(dailyUsageGraph).Bar(dailyUsageData);
+
+  })();
+</script>
+</body>
+
+</html>
