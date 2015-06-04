@@ -21,13 +21,15 @@
   <div class="row">
 
   <br />
-  <h1 class="page-header">Fancy Graphs</h1>
+  <h1 class="page-header">Grid vs Solar</h1>
+  <h2>Pie Charts</h2>
+  <canvas id="solarVsGridPie" width="100" height="25"></canvas>
+
   <h2>Average Hourly Usage</h2>
   <canvas id="averageHourlyUsageGraph" width="100" height="25"></canvas>
   <br />
   <br />
 
-  <br />
   <h2>Daily Usage</h2>
   <canvas id="dailyUsageGraph" width="100" height="25"></canvas>
   <br />
@@ -85,6 +87,9 @@
     var solarKWH = [];
     var avgTemp = [];
 
+    var totalGridKWH = 0;
+    var totalSolarKWH = 0;
+
     if(data.length == 0)
       $("#dailyUsage").append("<tr><td colspan='5'>No Data Found</td></tr>");
     else
@@ -105,7 +110,11 @@
          gridKWH.push(this.GridKWH);
          solarKWH.push(this.SolarKWH);
          avgTemp.push(this.AvgTemp);
+
+         totalGridKWH = totalGridKWH + this.GridKWH;
+         totalSolarKWH = totalSolarKWH + this.SolarKWH;
       });
+      drawSolarVsGridPie(totalGridKWH, totalSolarKWH);
       drawDailyUsageGraph(day, usedKWH, solarKWH);
     }
   }
@@ -177,6 +186,35 @@
       ]
     };
     dailyUsageChart = new Chart(dailyUsageGraph).Bar(dailyUsageData);
+  };
+
+  function drawSolarVsGridPie(totalGridKWH, totalSolarKWH)
+  {
+    Chart.defaults.global.responsive = true;
+    Chart.defaults.global.maintainAspectRatio = true;
+    Chart.defaults.global.tooltipTitleFontSize = 14;
+    Chart.defaults.global.tooltipFontSize = 12;
+    Chart.defaults.global.scaleFontColor = "#444444";
+    Chart.defaults.global.scaleLineColor = "#dddddd";
+    Chart.defaults.global.scaleGridLineColor = "#cccccc";
+
+    var solarVsGridPie = document.getElementById('solarVsGridPie').getContext('2d');
+    var solarVsGridData = [
+      {
+        value: totalGridKWH,
+        color:"#AA0000",
+        highlight: "#FF0000",
+        label: "Grd"
+      },
+      {
+        value: totalSolarKWH,
+        color: "#00AA00",
+        highlight: "#00FF00",
+        label: "Solar"
+      }
+    ];
+
+    dailyUsageChart = new Chart(solarVsGridPie).Pie(solarVsGridData);
   };
 
   function drawAverageHourlyUsageGraph(hour, usedKWH, solarKWH)
