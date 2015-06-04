@@ -17,6 +17,6 @@ HOUR(logDate) AS "Hour",
 ROUND(AVG(meterKWH) + AVG(solarKWH), 3) AS "UsedKWH",
 ROUND(AVG(meterKWH), 3) AS "GridKWH",
 ROUND(AVG(solarKWH), 3) AS "SolarKWH",
-ROUND(AVG(outsideTemperature), 2) AS "Temp"
+ROUND(AVG(outsideTemperature), 2) AS "OutsideTemp"
 FROM PowerUsage
 GROUP BY HOUR(logDate);
