@@ -23,7 +23,25 @@ $app->get('/', function() {
 
 $app->get('/UsageByDay', function()
 {
+    DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
     $result = DB::select('SELECT * FROM UsageByDay');
     $response = response()->json($result);
     return $response;    
+});
+
+$app->get('/AverageUsageByHour', function()
+{
+    DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
+    $result = DB::select('SELECT * FROM AverageUsageByHour');
+    $response = response()->json($result);
+    return $response;    
+});
+
+$app->get('/Time', function()
+{
+    DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
+    $result = DB::select("SHOW VARIABLES LIKE 'time%'");
+    $response = response()->json($result);
+    return $response;    
+
 });
