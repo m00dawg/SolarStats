@@ -27,8 +27,8 @@
     </div>
     <div class="col-md-4">
         <h2>Today</h2>
+        <canvas id="solarVsGridPieToday" width="50" height="25"></canvas>
     </div>
-
   </div>
 
   <div class="row">
@@ -75,6 +75,16 @@
       success: displayAverageUsageByHour,
       //error: errorCallback
   });
+
+  jQuery.ajax({
+      type: "GET",
+      url: "http://solarstats.moocow.home/api/TodaysUsageByHour",
+      contentType: "application/json",
+      dataType: "json",
+      success: displayTodaysUsageByHour,
+      //error: errorCallback
+  });
+
 
   function displayUsageByDay(data, status, jqXHR)
   {
@@ -151,6 +161,47 @@
     }
   }
 
+  function displayTodaysUsageByHour(data, status, jqXHR)
+  {
+    var hour = []
+    var usedKWH = [];
+    var gridKWH = [];
+    var solarKWH = [];
+    var outsideTemp = [];
+
+    var totalGridKWH = 0;
+    var totalSolarKWH = 0;
+
+    if(data.length == 0)
+      //$("#averageHourlyUsage").append("<tr><td colspan='5'>No Data Found</td></tr>");
+      { }
+    else
+    {
+      $.each(data, function()
+      {
+        /*
+        var f = Math.round(this.OutsideTemp * (9/5) + 32)
+        $("#averageHourlyUsage").append(
+          "<tr><td>" + this.Hour +
+          "</td><td>" + this.UsedKWH +
+          "</td><td>" + this.GridKWH +
+          "</td><td>" + this.SolarKWH +
+          "</td><td>" + this.OutsideTemp + "C (" + f + "F)" +
+          "</td></tr>");
+
+         hour.push(this.Hour);
+         usedKWH.push(this.UsedKWH);
+         gridKWH.push(this.GridKWH);
+         solarKWH.push(this.SolarKWH);
+         outsideTemp.push(this.OutsideTemp);
+         */
+         totalGridKWH = totalGridKWH + parseInt(this.GridKWH);
+         totalSolarKWH = totalSolarKWH + parseInt(this.SolarKWH);
+      });
+      drawTodaysSolarVsGridPie(totalGridKWH, totalSolarKWH);
+    }
+  }
+
 
   function drawDailyUsageGraph(day, usedKWH, solarKWH)
   {
@@ -214,6 +265,35 @@
     ];
 
     solarVsGridPieChart = new Chart(solarVsGridPie).Pie(solarVsGridData);
+  };
+
+  function drawTodaysSolarVsGridPie(totalGridKWH, totalSolarKWH)
+  {
+    Chart.defaults.global.responsive = true;
+    Chart.defaults.global.maintainAspectRatio = true;
+    Chart.defaults.global.tooltipTitleFontSize = 14;
+    Chart.defaults.global.tooltipFontSize = 12;
+    Chart.defaults.global.scaleFontColor = "#444444";
+    Chart.defaults.global.scaleLineColor = "#dddddd";
+    Chart.defaults.global.scaleGridLineColor = "#cccccc";
+
+    var solarVsGridPie = document.getElementById('todaysSolarVsGridPie').getContext('2d');
+    var solarVsGridData = [
+      {
+        value: totalGridKWH,
+        color: "rgba(0,0,250,0.5)",
+        highlight: "rgba(0, 0, 255, 0.75)",
+        label: "Grid"
+      },
+      {
+        value: totalSolarKWH,
+        color: "rgba(0,250,0,0.5)",
+        highlight: "rgba(0, 255, 0, 0.75)",
+        label: "Solar"
+      }
+    ];
+
+    todaysSolarVsGridPieChart = new Chart(solarVsGridPie).Pie(solarVsGridData);
   };
 
   function drawAverageHourlyUsageGraph(hour, usedKWH, solarKWH)
