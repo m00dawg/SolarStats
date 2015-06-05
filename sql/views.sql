@@ -30,7 +30,7 @@ ROUND(SUM(meterKWH), 3) AS "GridKWH",
 ROUND(SUM(solarKWH), 3) AS "SolarKWH",
 ROUND(SUM(outsideTemperature), 2) AS "OutsideTemp"
 FROM PowerUsage
-WHERE logDate > CONCAT(DATE(NOW()), ' 00:00:00')
+WHERE logDate >= CONCAT(DATE(NOW()), ' 00:00:00')
 GROUP BY HOUR(logDate);
 
 DROP VIEW IF EXISTS TodaysUsageByMinute;
