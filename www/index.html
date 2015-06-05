@@ -63,13 +63,13 @@
         <br />
         <h1 class="page-header" id="rawData">Raw Data</h1>
         <h2>Average Hourly Usage</h2>
-        <table class="table table-striped table-bordered" id="dailyUsage">
-            <tr><th>Day</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Outside Temp</th></tr>
+        <table class="table table-striped table-bordered" id="averageHourlyUsage">
+            <tr><th>Hour</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Outside Temp</th></tr>
         </table>
         <br />
         <h2>Daily Usage</h2>
-        <table class="table table-striped table-bordered" id="averageHourlyUsage">
-            <tr><th>Hour</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Outside Temp</th></tr>
+        <table class="table table-striped table-bordered" id="dailyUsage">
+            <tr><th>Day</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Outside Temp</th></tr>
         </table>
       </div>
     </div>
@@ -83,18 +83,32 @@
 <script>
   var usageColors =
     {
-      fillColor: "rgba(250,120,120,0.7)",
-      strokeColor: "rgba(250,120,120,0.8)",
+      /*
+      fillColor: "rgba(250,120,120,0.5)",
+      strokeColor: "rgba(250,120,120,0.7)",
       highlightFill: "rgba(255,50,50,1)",
       highlightStroke: "rgba(255,0,0,1)",
+      */
+      fillColor: "rgba(120,120,250,0.4)",
+      strokeColor: "rgba(120,120,250,0.6)",
+      highlightFill: "rgba(50,50,255,1)",
+      highlightStroke: "rgba(0,0,255,1)",
     };
 
   var solarColors =
     {
-      fillColor: "rgba(120,250,120,0.7)",
-      strokeColor: "rgba(120,250,120,0.8)",
-      highlightFill: "rgba(50,255,50,1)",
+
+      fillColor: "rgba(25,250,25,0.8)",
+      strokeColor: "rgba(25,250,25,0.9)",
+      highlightFill: "rgba(25,255,25,1)",
       highlightStroke: "rgba(0,255,0,1)",
+
+      /*
+      fillColor: "rgba(250,250,25,0.8)",
+      strokeColor: "rgba(250,250,25,0.9)",
+      highlightFill: "rgba(255,255,25,1)",
+      highlightStroke: "rgba(255,255,0,1)",
+      */
     };
 
   /* Chart Options */
@@ -110,7 +124,7 @@
 
   jQuery.ajax({
       type: "GET",
-      url: "http://solarstats.moocow.home/api/UsageByDay",
+      url: "/api/UsageByDay",
       contentType: "application/json",
       dataType: "json",
       success: displayUsageByDay,
@@ -119,7 +133,7 @@
 
   jQuery.ajax({
       type: "GET",
-      url: "http://solarstats.moocow.home/api/AverageUsageByHour",
+      url: "/api/AverageUsageByHour",
       contentType: "application/json",
       dataType: "json",
       success: displayAverageUsageByHour,
@@ -128,7 +142,7 @@
 
   jQuery.ajax({
       type: "GET",
-      url: "http://solarstats.moocow.home/api/TodaysUsageByHour",
+      url: "/api/TodaysUsageByHour",
       contentType: "application/json",
       dataType: "json",
       success: displayTodaysUsage,
