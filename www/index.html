@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Bootstrap 101 Template</title>
+<title>Turn Off the Dryer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- Bootstrap -->
 <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
@@ -20,22 +20,22 @@
 <div class="container">
   <div class="row">
     <br />
-    <h1 class="page-header">Solar vs Grid Usage</h1>
-    <div class="col-md-8">
+    <h1 class="page-header">Solar vs Usage</h1>
+    <div class="col-md-6">
         <h2>Overall</h2>
-        <canvas id="solarVsGridPie" width="50" height="25"></canvas>
+        <canvas id="solarVsUsedPie"></canvas>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-6">
         <h2>Today</h2>
-        <canvas id="solarVsGridPieToday" width="50" height="25"></canvas>
+        <canvas id="solarVsUsedPieToday"></canvas>
     </div>
   </div>
 
   <div class="row">
     <h1 class="page-header">Fancy Bar Charts</h1>
-    <h2>Daily Usage</h2>
-    <canvas id="averageHourlyUsageGraph" width="100" height="25"></canvas>
     <h2>Average Hourly Usage</h2>
+    <canvas id="averageHourlyUsageGraph" width="100" height="25"></canvas>
+    <h2>Daily Usage</h2>
     <canvas id="dailyUsageGraph" width="100" height="25"></canvas>
   </div>
 
@@ -94,7 +94,7 @@
     var solarKWH = [];
     var avgTemp = [];
 
-    var totalGridKWH = 0;
+    var totalUsedKWH = 0;
     var totalSolarKWH = 0;
 
     if(data.length == 0)
@@ -118,11 +118,10 @@
          solarKWH.push(this.SolarKWH);
          avgTemp.push(this.AvgTemp);
 
-         totalGridKWH = totalGridKWH + parseInt(this.GridKWH);
+         totalUsedKWH = totalUsedKWH + parseInt(this.UsedKWH);
          totalSolarKWH = totalSolarKWH + parseInt(this.SolarKWH);
       });
-        console.log(totalGridKWH);
-      drawSolarVsGridPie(totalGridKWH, totalSolarKWH);
+      drawSolarVsUsedPie(totalUsedKWH, totalSolarKWH);
       drawDailyUsageGraph(day, usedKWH, solarKWH);
     }
 
@@ -169,7 +168,7 @@
     var solarKWH = [];
     var outsideTemp = [];
 
-    var totalGridKWH = 0;
+    var totalUsedKWH = 0;
     var totalSolarKWH = 0;
 
     if(data.length == 0)
@@ -195,10 +194,10 @@
          solarKWH.push(this.SolarKWH);
          outsideTemp.push(this.OutsideTemp);
          */
-         totalGridKWH = totalGridKWH + parseInt(this.GridKWH);
-         totalSolarKWH = totalSolarKWH + parseInt(this.SolarKWH);
+         totalUsedKWH = totalUsedKWH + parseFloat(this.UsedKWH);
+         totalSolarKWH = totalSolarKWH + parseFloat(this.SolarKWH);
       });
-      drawTodaysSolarVsGridPie(totalGridKWH, totalSolarKWH);
+      drawTodaysSolarVsUsedPie(totalUsedKWH, totalSolarKWH);
     }
   }
 
@@ -238,7 +237,7 @@
     dailyUsageChart = new Chart(dailyUsageGraph).Bar(dailyUsageData);
   };
 
-  function drawSolarVsGridPie(totalGridKWH, totalSolarKWH)
+  function drawSolarVsUsedPie(totalUsedKWH, totalSolarKWH)
   {
     Chart.defaults.global.responsive = true;
     Chart.defaults.global.maintainAspectRatio = true;
@@ -248,13 +247,13 @@
     Chart.defaults.global.scaleLineColor = "#dddddd";
     Chart.defaults.global.scaleGridLineColor = "#cccccc";
 
-    var solarVsGridPie = document.getElementById('solarVsGridPie').getContext('2d');
-    var solarVsGridData = [
+    var solarVsUsagePie = document.getElementById('solarVsUsedPie').getContext('2d');
+    var solarVsUsageData = [
       {
-        value: totalGridKWH,
-        color: "rgba(0,0,250,0.5)",
-        highlight: "rgba(0, 0, 255, 0.75)",
-        label: "Grid"
+        value: totalUsedKWH,
+        color: "rgba(250,0,0,0.5)",
+        highlight: "rgba(255, 0, 0, 0.75)",
+        label: "Used"
       },
       {
         value: totalSolarKWH,
@@ -264,10 +263,10 @@
       }
     ];
 
-    solarVsGridPieChart = new Chart(solarVsGridPie).Pie(solarVsGridData);
+    solarVsUsagePieChart = new Chart(solarVsUsagePie).Pie(solarVsUsageData);
   };
 
-  function drawTodaysSolarVsGridPie(totalGridKWH, totalSolarKWH)
+  function drawTodaysSolarVsUsedPie(totalUsedKWH, totalSolarKWH)
   {
     Chart.defaults.global.responsive = true;
     Chart.defaults.global.maintainAspectRatio = true;
@@ -277,13 +276,13 @@
     Chart.defaults.global.scaleLineColor = "#dddddd";
     Chart.defaults.global.scaleGridLineColor = "#cccccc";
 
-    var solarVsGridPie = document.getElementById('todaysSolarVsGridPie').getContext('2d');
-    var solarVsGridData = [
+    var solarVsUsagePie = document.getElementById('solarVsUsedPieToday').getContext('2d');
+    var solarVsUsageData = [
       {
-        value: totalGridKWH,
-        color: "rgba(0,0,250,0.5)",
-        highlight: "rgba(0, 0, 255, 0.75)",
-        label: "Grid"
+        value: totalUsedKWH,
+        color: "rgba(250,0,0,0.5)",
+        highlight: "rgba(255, 0, 0, 0.75)",
+        label: "Used"
       },
       {
         value: totalSolarKWH,
@@ -293,7 +292,7 @@
       }
     ];
 
-    todaysSolarVsGridPieChart = new Chart(solarVsGridPie).Pie(solarVsGridData);
+    todaysSolarVsGridPieChart = new Chart(solarVsUsagePie).Pie(solarVsUsageData);
   };
 
   function drawAverageHourlyUsageGraph(hour, usedKWH, solarKWH)
