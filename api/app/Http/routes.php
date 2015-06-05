@@ -45,6 +45,14 @@ $app->get('/TodaysUsageByHour', function()
     return $response;
 });
 
+$app->get('/TodaysUsageByMinute', function()
+{
+    DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
+    $result = DB::select('SELECT * FROM TodaysUsageByMinute');
+    $response = response()->json($result);
+    return $response;
+});
+
 $app->get('/Time', function()
 {
     DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");

@@ -25,21 +25,22 @@ DROP VIEW IF EXISTS TodaysUsageByHour;
 CREATE VIEW TodaysUsageByHour AS
 SELECT
 HOUR(logDate) AS "Hour",
-ROUND(AVG(meterKWH) + AVG(solarKWH), 3) AS "UsedKWH",
-ROUND(AVG(meterKWH), 3) AS "GridKWH",
-ROUND(AVG(solarKWH), 3) AS "SolarKWH",
-ROUND(AVG(outsideTemperature), 2) AS "OutsideTemp"
+ROUND(SUM(meterKWH) + SUM(solarKWH), 3) AS "UsedKWH",
+ROUND(SUM(meterKWH), 3) AS "GridKWH",
+ROUND(SUM(solarKWH), 3) AS "SolarKWH",
+ROUND(SUM(outsideTemperature), 2) AS "OutsideTemp"
 FROM PowerUsage
-WHERE logDate > CONCAT(DATE(NOW(), ' 00:00:00');
+WHERE logDate > CONCAT(DATE(NOW()), ' 00:00:00')
 GROUP BY HOUR(logDate);
 
-DROP VIEW IF EXISTS AverageSolarVsGrid;
-CREATE VIEW AverageUsageByHour AS
+DROP VIEW IF EXISTS TodaysUsageByMinute;
+CREATE VIEW TodaysUsageByMinute AS
 SELECT
-HOUR(logDate) AS "Hour",
-ROUND(AVG(meterKWH) + AVG(solarKWH), 3) AS "UsedKWH",
-ROUND(AVG(meterKWH), 3) AS "GridKWH",
-ROUND(AVG(solarKWH), 3) AS "SolarKWH",
-ROUND(AVG(outsideTemperature), 2) AS "OutsideTemp"
+DATE_FORMAT(logDate, '%Y-%m-%d %h:%i') AS "Minute",
+ROUND(SUM(meterKWH) + SUM(solarKWH), 5) AS "UsedKWH",
+ROUND(SUM(meterKWH), 5) AS "GridKWH",
+ROUND(SUM(solarKWH), 5) AS "SolarKWH",
+ROUND(SUM(outsideTemperature), 2) AS "OutsideTemp"
 FROM PowerUsage
-GROUP BY HOUR(logDate);
+WHERE logDate > CONCAT(DATE(NOW()), ' 00:00:00')
+GROUP BY DATE_FORMAT(logDate, '%Y-%m-%d %h:%i');
