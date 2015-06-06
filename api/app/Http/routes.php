@@ -15,15 +15,57 @@ $app->get('/', function() use ($app) {
     return $app->welcome();
 });
 
-/*
-$app->get('/', function() {
-    return 'Hello World';
+
+$app->group(['prefix' => 'v1'], function($app)
+{
+  DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
+
+  $app->get('/usage/total', function()
+  {
+    $timeframe = 'today';
+    if(isset($_GET['timeframe']))
+      $timeframe = $_GET['timeframe'];
+    switch($timeframe)
+    {
+      case 'yesterday':
+      {
+        $where = "logDate >= CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 1 day)), ' 00:00:00')";
+        break;
+      }
+      case 'thisMonth':
+      {
+        $where = "logDate >= CONCAT(DATE_FORMAT(NOW(), '%Y-%m'), '-01 00:00:00')";
+        break;
+      }
+      // Today
+      default:
+      {
+        $where = "logDate >= CONCAT(DATE(NOW()), ' 00:00:00')";
+        break;
+      }
+    }
+    $result = DB::select("
+      SELECT
+        ROUND(SUM(meterKWH) + SUM(solarKWH), 3) AS 'UsedKWH',
+        ROUND(SUM(meterKWH), 3) AS 'GridKWH',
+        ROUND(SUM(solarKWH), 3) AS 'SolarKWH',
+        ROUND(AVG(outsideTemperature), 2) AS 'OutsideTemp'
+      FROM PowerUsage
+      WHERE $where");
+    $response = response()->json($result);
+    return $response;
+  });
+
+  $app->get('Time', function()
+  {
+      $result = DB::select("SHOW VARIABLES LIKE 'time%'");
+      $response = response()->json($result);
+      return $response;
+  });
 });
-*/
 
 $app->get('/UsageByDay', function()
 {
-    DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
     $result = DB::select('SELECT * FROM UsageByDay');
     $response = response()->json($result);
     return $response;
@@ -31,7 +73,6 @@ $app->get('/UsageByDay', function()
 
 $app->get('/AverageUsageByHour', function()
 {
-    DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
     $result = DB::select('SELECT * FROM AverageUsageByHour');
     $response = response()->json($result);
     return $response;
@@ -39,7 +80,6 @@ $app->get('/AverageUsageByHour', function()
 
 $app->get('/TodaysUsageByHour', function()
 {
-    DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
     $result = DB::select('SELECT * FROM TodaysUsageByHour');
     $response = response()->json($result);
     return $response;
@@ -47,7 +87,6 @@ $app->get('/TodaysUsageByHour', function()
 
 $app->get('/TodaysUsageByMinute', function()
 {
-    DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
     $result = DB::select('SELECT * FROM TodaysUsageByMinute');
     $response = response()->json($result);
     return $response;
@@ -55,9 +94,7 @@ $app->get('/TodaysUsageByMinute', function()
 
 $app->get('/Time', function()
 {
-    DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
     $result = DB::select("SHOW VARIABLES LIKE 'time%'");
     $response = response()->json($result);
     return $response;
-
 });
