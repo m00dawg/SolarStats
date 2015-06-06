@@ -19,7 +19,7 @@
     <div id="navbar" class="collapse navbar-collapse">
       <ul class="nav navbar-nav">
         <li class="active"><a href="#">Home</a></li>
-        <li><a href="http://solar.moocow.home">eGauge</a></li>
+        <li><a href="http://egauge19759.egaug.es/">eGauge</a></li>
       </ul>
     </div>
   </div>
@@ -40,11 +40,15 @@
       <br />
       <h1 class="page-header" id="solarVsUsage">Solar vs Usage</h1>
       <div class="row placeholders">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <h2>Overall</h2>
             <canvas id="solarVsUsedPie"></canvas>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
+            <h2>Yesterday</h2>
+            <canvas id="solarVsUsedPieYesterday"></canvas>
+        </div>
+        <div class="col-md-4">
             <h2>Today</h2>
             <canvas id="solarVsUsedPieToday"></canvas>
         </div>
@@ -128,7 +132,6 @@
       contentType: "application/json",
       dataType: "json",
       success: displayUsageByDay,
-      //error: errorCallback
   });
 
   jQuery.ajax({
@@ -137,7 +140,6 @@
       contentType: "application/json",
       dataType: "json",
       success: displayAverageUsageByHour,
-      //error: errorCallback
   });
 
   jQuery.ajax({
@@ -146,7 +148,17 @@
       contentType: "application/json",
       dataType: "json",
       success: displayTodaysUsage,
-      //error: errorCallback
+  });
+
+  jQuery.ajax({
+      type: "GET",
+      url: "/api/v1/usage/total?timeframe=yesterday",
+      contentType: "application/json",
+      dataType: "json",
+      success: function(data)
+      {
+        drawSolarVsUsedPie(data[0].UsedKWH, data[0].SolarKWH, 'solarVsUsedPieYesterday');
+      },
   });
 
 
@@ -159,6 +171,7 @@
     var avgTemp = [];
 
     var totalUsedKWH = 0;
+    var totalGridKWH = 0;
     var totalSolarKWH = 0;
 
     if(data.length == 0)
@@ -183,8 +196,18 @@
          avgTemp.push(this.AvgTemp);
 
          totalUsedKWH = totalUsedKWH + parseInt(this.UsedKWH);
+         totalGridKWH = totalGridKWH + parseInt(this.GridKWH);
          totalSolarKWH = totalSolarKWH + parseInt(this.SolarKWH);
       });
+
+      $("#dailyUsage").append(
+        "<tr><th>Total</th>" +
+        "<td>" + totalUsedKWH + "</td>" +
+        "<td>" + totalGridKWH + "</td>" +
+        "<td>" + totalSolarKWH +
+        "<td></td>" +
+        "</td></tr>");
+
       drawSolarVsUsedPie(totalUsedKWH, totalSolarKWH, 'solarVsUsedPie');
       drawUsageGraph(day, usedKWH, solarKWH, 'dailyUsageGraph');
     }
