@@ -3,14 +3,11 @@
 <head>
 <title>Turn Off the Dryer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Bootstrap -->
 <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
 <link href="css/dashboard.css" rel="stylesheet" media="screen">
-
 </head>
 
 <body>
-
 <nav class="navbar navbar-inverse navbar-fixed-top">
   <div class="container-fluid">
     <div class="navbar-header">
@@ -38,7 +35,7 @@
 
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
       <br />
-      <h1 class="page-header" id="solarVsUsage">Solar vs Usage</h1>
+      <h1 class="page-header" id="solarVsUsage">Solar vs Grid</h1>
       <div class="row placeholders">
         <div class="col-md-4">
             <h2>Overall</h2>
@@ -85,35 +82,29 @@
 <script src="bootstrap/js/bootstrap.min.js"></script>
 
 <script>
+  var gridColors =
+  {
+    fillColor: "rgba(250,120,120,0.7)",
+    strokeColor: "rgba(250,120,120,0.9)",
+    highlightFill: "rgba(255,25,25,1)",
+    highlightStroke: "rgba(255,0,0,1)",
+  };
+
   var usageColors =
-    {
-      /*
-      fillColor: "rgba(250,120,120,0.5)",
-      strokeColor: "rgba(250,120,120,0.7)",
-      highlightFill: "rgba(255,50,50,1)",
-      highlightStroke: "rgba(255,0,0,1)",
-      */
-      fillColor: "rgba(120,120,250,0.4)",
-      strokeColor: "rgba(120,120,250,0.6)",
-      highlightFill: "rgba(50,50,255,1)",
-      highlightStroke: "rgba(0,0,255,1)",
-    };
+  {
+    fillColor: "rgba(120,120,250,0.4)",
+    strokeColor: "rgba(120,120,250,0.6)",
+    highlightFill: "rgba(50,50,255,1)",
+    highlightStroke: "rgba(0,0,255,1)",
+  };
 
   var solarColors =
-    {
-
-      fillColor: "rgba(25,250,25,0.8)",
-      strokeColor: "rgba(25,250,25,0.9)",
-      highlightFill: "rgba(25,255,25,1)",
-      highlightStroke: "rgba(0,255,0,1)",
-
-      /*
-      fillColor: "rgba(250,250,25,0.8)",
-      strokeColor: "rgba(250,250,25,0.9)",
-      highlightFill: "rgba(255,255,25,1)",
-      highlightStroke: "rgba(255,255,0,1)",
-      */
-    };
+  {
+    fillColor: "rgba(25,250,25,0.8)",
+    strokeColor: "rgba(25,250,25,0.9)",
+    highlightFill: "rgba(25,255,25,1)",
+    highlightStroke: "rgba(0,255,0,1)",
+  };
 
   /* Chart Options */
   Chart.defaults.global.animation = false;
@@ -157,7 +148,7 @@
       dataType: "json",
       success: function(data)
       {
-        drawSolarVsUsedPie(data[0].UsedKWH, data[0].SolarKWH, 'solarVsUsedPieYesterday');
+        drawSolarVsUsedPie(data[0].GridKWH, data[0].SolarKWH, 'solarVsUsedPieYesterday');
       },
   });
 
@@ -208,10 +199,9 @@
         "<td></td>" +
         "</td></tr>");
 
-      drawSolarVsUsedPie(totalUsedKWH, totalSolarKWH, 'solarVsUsedPie');
+      drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, 'solarVsUsedPie');
       drawUsageGraph(day, usedKWH, solarKWH, 'dailyUsageGraph');
     }
-
   }
 
   function displayAverageUsageByHour(data, status, jqXHR)
@@ -251,6 +241,7 @@
   function displayTodaysUsage(data, status, jqXHR)
   {
     var totalUsedKWH = 0;
+    var totalGridKWH = 0;
     var totalSolarKWH = 0;
 
     if(data.length == 0)
@@ -259,10 +250,11 @@
     {
       $.each(data, function()
       {
+         totalGridKWH = totalGridKWH + parseFloat(this.GridKWH);
          totalUsedKWH = totalUsedKWH + parseFloat(this.UsedKWH);
          totalSolarKWH = totalSolarKWH + parseFloat(this.SolarKWH);
       });
-      drawSolarVsUsedPie(totalUsedKWH, totalSolarKWH, 'solarVsUsedPieToday');
+      drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, 'solarVsUsedPieToday');
     }
   }
 
@@ -293,15 +285,15 @@
     dailyUsageChart = new Chart(dailyUsageGraph).Bar(dailyUsageData);
   };
 
-  function drawSolarVsUsedPie(totalUsedKWH, totalSolarKWH, element)
+  function drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, element)
   {
     var solarVsUsagePie = document.getElementById(element).getContext('2d');
     var solarVsUsageData = [
       {
-        value: totalUsedKWH,
-        color: usageColors.fillColor,
-        highlight: usageColors.highlightFill,
-        label: "Used"
+        value: totalGridKWH,
+        color: gridColors.fillColor,
+        highlight: gridColors.highlightFill,
+        label: "Grid"
       },
       {
         value: totalSolarKWH,
