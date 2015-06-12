@@ -56,9 +56,16 @@
       <div class="row">
         <h1 class="page-header" id="fancyBarCharts">Fancy Bar Charts</h1>
         <h2>Average Hourly Usage</h2>
+        <h3>Usage and Solar</h3>
         <canvas id="averageHourlyUsageGraph" width="90" height="25"></canvas>
+        <h3>Temperature</h3>
+        <canvas id="averageHourlyTempGraph" width="90" height="25"></canvas>
+
         <h2>Daily Usage</h2>
+        <h3>Usage and Solar</h3>
         <canvas id="dailyUsageGraph" width="90" height="25"></canvas>
+        <h3>Temperature</h3>
+        <canvas id="dailyTempGraph" width="90" height="25"></canvas>
 
         <br />
         <br />
@@ -106,6 +113,14 @@
     highlightStroke: "rgba(0,255,0,1)",
   };
 
+  var tempColors =
+  {
+    fillColor: "rgba(250,50,50,0.7)",
+    strokeColor: "rgba(250,25,25,1)",
+    highlightFill: "rgba(255,25,25,1)",
+    highlightStroke: "rgba(255,0,0,1)",
+  };
+
   /* Chart Options */
   Chart.defaults.global.animation = false;
   Chart.defaults.global.animationSteps = 10;
@@ -116,10 +131,11 @@
   Chart.defaults.global.scaleFontColor = "#444444";
   Chart.defaults.global.scaleLineColor = "#dddddd";
   Chart.defaults.global.scaleGridLineColor = "#cccccc";
+  Chart.defaults.global.bezierCurveTension = 0;
 
   jQuery.ajax({
       type: "GET",
-      url: "/api/UsageByDay",
+      url: "/api/v1/usage/average?timeframe=day",
       contentType: "application/json",
       dataType: "json",
       success: displayUsageByDay,
@@ -127,7 +143,7 @@
 
   jQuery.ajax({
       type: "GET",
-      url: "/api/AverageUsageByHour",
+      url: "/api/v1/usage/average?timeframe=hour",
       contentType: "application/json",
       dataType: "json",
       success: displayAverageUsageByHour,
@@ -201,6 +217,7 @@
 
       drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, 'solarVsUsedPie');
       drawUsageGraph(day, usedKWH, solarKWH, 'dailyUsageGraph');
+      drawTempGraph(day, avgTemp, 'dailyTempGraph', 0.1);
     }
   }
 
@@ -234,6 +251,7 @@
          outsideTemp.push(this.OutsideTemp);
       });
       drawUsageGraph(hour, usedKWH, solarKWH, 'averageHourlyUsageGraph');
+      drawTempGraph(hour, outsideTemp, 'averageHourlyTempGraph', 0.3);
       //drawAverageHourlyUsageGraph(hour, usedKWH, solarKWH);
     }
   }
@@ -283,6 +301,29 @@
       ]
     };
     dailyUsageChart = new Chart(dailyUsageGraph).Bar(dailyUsageData);
+  };
+
+  function drawTempGraph(labels, temp, element, curveTension)
+  {
+    var options = {
+      bezierCurveTension : curveTension,
+    }
+    var tempUsageGraph = document.getElementById(element).getContext('2d');
+    var tempUsageData = {
+      labels: labels,
+      datasets: [
+          {
+              label: "Temperature",
+              fillColor: tempColors.fillColor,
+              strokeColor: tempColors.strokeColor,
+              highlightFill: tempColors.highlightFill,
+              highlightStroke: tempColors.highlightStroke,
+              data: temp
+          },
+      ]
+    };
+    dailyUsageChart = new Chart(tempUsageGraph).Line(tempUsageData, options);
+
   };
 
   function drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, element)

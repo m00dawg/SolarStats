@@ -20,6 +20,30 @@ $app->group(['prefix' => 'v1'], function($app)
 {
   DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
 
+  $app->get('/usage/average', function()
+  {
+    $timeframe = 'hour';
+    if(isset($_GET['timeframe']))
+      $timeframe = $_GET['timeframe'];
+    switch($timeframe)
+    {
+      case 'day':
+      {
+        $result = DB::select('SELECT * FROM UsageByDay');
+        break;
+      }        
+      default:
+      {
+        $result = DB::select('SELECT * FROM AverageUsageByHour');
+        break;
+      }
+    }
+
+
+    return response()->json($result);
+  });
+
+
   $app->get('/usage/total', function()
   {
     $timeframe = 'today';
