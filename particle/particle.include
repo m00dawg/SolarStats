@@ -2,6 +2,8 @@ OneWire.h
 OneWire.cpp
 DallasTemperature.h
 DallasTemperature.cpp
-MQTT.h
-MQTT.cpp
-collector.ino
+HttpClient.h
+HttpClient.cpp
+#MQTT.h
+#MQTT.cpp
+collector-http.ino
