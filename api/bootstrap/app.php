@@ -63,8 +63,9 @@ $app->singleton(
 //     // 'Laravel\Lumen\Http\Middleware\VerifyCsrfToken',
 // ]);
 
-$app->routeMiddleware([
-	'App\Http\Middleware\DBTimezone',
+$app->middleware([
+	'App\Http\Middleware\CORS',
+	//'App\Http\Middleware\DBTimezone',
  ]);
 
 /*

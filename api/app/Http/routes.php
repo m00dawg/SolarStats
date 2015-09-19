@@ -22,23 +22,33 @@ $app->group(['prefix' => 'v1'], function($app)
 
   $app->get('/usage/average', function()
   {
+    $where = "";
     $timeframe = 'hour';
     if(isset($_GET['timeframe']))
       $timeframe = $_GET['timeframe'];
+
     switch($timeframe)
     {
       case 'day':
       {
-        $result = DB::select('SELECT * FROM UsageByDay');
+        if(isset($_GET['lastDays']))
+            $result = DB::select('SELECT * FROM UsageByDay
+              WHERE Day >= DATE_SUB(NOW(), INTERVAL ? day)', [$_GET['lastDays']]);
+        else
+          $result = DB::select('SELECT * FROM UsageByDay');
         break;
-      }        
+      }
+      case 'month':
+      {
+        $result = DB::select('SELECT * FROM UsageByMonth');
+        break;
+      }
       default:
       {
         $result = DB::select('SELECT * FROM AverageUsageByHour');
         break;
       }
     }
-
 
     return response()->json($result);
   });
