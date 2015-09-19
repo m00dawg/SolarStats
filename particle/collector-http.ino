@@ -1,6 +1,10 @@
-#include "MQTT.h"
+/*
+    Temperature v1.00
+    By: Tim Soderstrom
+*/
 #include "OneWire.h"
 #include "DallasTemperature.h"
+#include "HttpClient.h"
 
 /*
  * -----------
@@ -8,9 +12,13 @@
  * -----------
  */
 
+#define LOGGING true
+
+/* Pins */
 const int temperatureProbes = D3;
-byte mqttServer[] = { 192,168,100,2 };
-char name[] = "OutsideSensor";
+
+/* Settings */
+const int sleepSeconds = 180;
 
 /*
  * -------
@@ -25,28 +33,40 @@ DallasTemperature sensors = DallasTemperature(&oneWire);
 // DeviceAddress insideThermometer, outsideThermometer;
 DeviceAddress thermometer;
 
-// MQTT client and callbacks
-void callback(char* topic, byte* payload, unsigned int length);
-void callback(char* topic, byte* payload, unsigned int length) { }
-MQTT mqttClient(mqttServer, 1883, callback);
+// HTTP Client
+HttpClient http;
+
+// Headers currently need to be set at init, useful for API keys etc.
+http_header_t headers[] = {
+    //  { "Content-Type", "application/json" },
+    //  { "Accept" , "application/json" },
+    { "Accept" , "*/*"},
+    { NULL, NULL } // NOTE: Always terminate headers will NULL
+};
 
 /*
- * ---------
+ * ----------------
  * VARIABLES
- * ---------
+ * ----------------
  */
 
 bool sleep = false;
 double currentTemp = 0;
-char tempString[20];
 
-// Device MAC Address
+//MAC Address
 byte mac[6];
+
+http_request_t request;
+http_response_t response;
+
+char uri[32];
+char tempString[20];
 
 void setup()
 {
   Serial.begin(9600);
-  delay(2000);
+  delay(5000);
+  Serial.println("Temperator");
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
   WiFi.macAddress(mac);
@@ -59,10 +79,14 @@ void setup()
 
   // Subscribe variables to the cloud
   //Spark.variable("temperature", &currentTemp, DOUBLE);
+  //Spark.variable("stats", &stats, STRING);
 
   // Turn off that incredibly bright LED
   //RGB.control(true);
   //RGB.brightness(0);
+
+  request.hostname = "solarstats.moocow.home";
+  request.port = 80;
 }
 
 void loop()
@@ -72,7 +96,6 @@ void loop()
   Serial.println(WiFi.RSSI());
   if(!collectTemperatures())
     Serial.println("NO SENSORS");
-  /*
   sprintf(uri, "");
   sprintf(tempString, "%.2f", currentTemp);
   strcat(uri, "/setTemp.php?temp=");
@@ -80,19 +103,17 @@ void loop()
   Serial.print("URI: ");
   Serial.println(uri);
   request.path = uri;
-  */
   //delay(10000);
-
-  sprintf(tempString, "%.2f", currentTemp);
-  mqttClient.connect(name);
-
-  if (mqttClient.isConnected())
-  {
-    mqttClient.publish("/temperature", tempString);
+  http.get(request, response, headers);
+  Serial.print("Application>\tResponse status: ");
+  Serial.println(response.status);
+  Serial.print("Application>\tHTTP Response Body: ");
+  Serial.println(response.body);
+  if(response.status == 200)
     sleep = true;
-  }
+  //Spark.sleep(60);
   if(sleep)
-    Spark.sleep(SLEEP_MODE_DEEP, 60);
+    Spark.sleep(SLEEP_MODE_DEEP, sleepSeconds);
 }
 
 boolean collectTemperatures()
@@ -107,3 +128,4 @@ boolean collectTemperatures()
   }
   return false;
 }
+
