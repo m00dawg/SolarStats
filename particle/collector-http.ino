@@ -2,8 +2,7 @@
     Temperature v1.00
     By: Tim Soderstrom
 */
-#include "OneWire.h"
-#include "DallasTemperature.h"
+#include "particle-dallas-temperature.h"
 #include "HttpClient.h"
 
 /*

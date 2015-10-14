@@ -1,7 +1,11 @@
-OneWire.h
-OneWire.cpp
-DallasTemperature.h
-DallasTemperature.cpp
+Particle-OneWire/Particle-OneWire.h
+Particle-OneWire/Particle-OneWire.cpp
+ParticleDallasTemperature/firmware/particle-dallas-temperature.h
+ParticleDallasTemperature/firmware/particle-dallas-temperature.cpp
+#Particle-OneWire.h
+#Particle-OneWire.cpp
+#particle-dallas-temperature.h
+#particle-dallas-temperature.cpp
 HttpClient.h
 HttpClient.cpp
 #MQTT.h
