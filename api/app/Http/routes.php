@@ -27,11 +27,11 @@ $app->group(['prefix' => 'v1'], function($app)
       $temperature = $memcached->get('SolarStats:outsideTemperature');
       $memcached->quit();
 
-      if(!isset($temperature))
+      if(!isset($temperature) || $temperature == '')
         $temperature = 'Unknown';
 
       $result = DB::select("SELECT
-        $temperature AS 'CurrentTemperature',
+        '$temperature' AS 'CurrentTemperature',
         MIN(outsideTemperature) AS 'LowTemperature',
         MAX(outsideTemperature) AS 'HighTemperature' FROM PowerUsage
         WHERE logDate >= CONCAT(DATE(NOW()), ' 00:00:00') AND logDate <= NOW()");
