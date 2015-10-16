@@ -29,14 +29,38 @@
 
     <div class="col-sm-3 col-md-2 sidebar">
      <ul class="nav nav-sidebar">
+      <li><a href="#weather">Weather <span class="sr-only">(current)</span></a></li>
        <li><a href="#solarVsUsage">Solar vs Usage <span class="sr-only">(current)</span></a></li>
-       <li><a href="#fancyBarCharts">Fancy Bar Charts</a></li>
+       <li><a href="#fancyCharts">Fancy Charts</a></li>
        <li><a href="#rawData">Raw Data</a></li>
      </ul>
     </div>
 
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
       <br />
+      <h1 class="page-header" id="weather">Weather</h1>
+      <h2>Temperature</h2>
+      <div class="row">
+
+      <div class="col-md-2">
+        <h3>Today</h3>
+        <ul>
+          <li><strong>Low</strong>: <span id="todayLowTemperature"></span></li>
+          <li><strong>High</strong>: <span id="todayHighTemperature"></span></li>
+          <li><strong>Current</strong>: <span id="currentTemperature"></span></li>
+        </ul>
+      </div>
+      <div class="col-md-2">
+        <h3>Yesterday</h3>
+        <ul>
+
+          <li><strong>Low</strong>: <span id="yesterdayLowTemperature"></span></li>
+          <li><strong>High</strong>: <span id="yesterdayHighTemperature"></span></li>
+        </ul>
+      </div>
+    </div>
+      <br />
+
       <h1 class="page-header" id="solarVsUsage">Solar vs Grid</h1>
       <div class="row placeholders">
         <div class="col-md-4">
@@ -56,7 +80,7 @@
       <br />
       <br />
       <div class="row">
-        <h1 class="page-header" id="fancyBarCharts">Fancy Bar Charts</h1>
+        <h1 class="page-header" id="fancyCharts">Fancy Charts</h1>
         <h2>Average Hourly Usage</h2>
         <h3>Usage and Solar</h3>
         <canvas id="averageHourlyUsageGraph" width="90" height="25"></canvas>
@@ -80,16 +104,16 @@
         <h1 class="page-header" id="rawData">Raw Data</h1>
         <h2>Monthly Usage</h2>
         <table class="table table-striped table-bordered" id="monthlyUsage">
-            <tr><th>Month</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Outside Temp</th></tr>
+            <tr><th>Month</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Avg. Outside Temp</th></tr>
         </table>
         <h2>Average Hourly Usage</h2>
         <table class="table table-striped table-bordered" id="averageHourlyUsage">
-            <tr><th>Hour</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Outside Temp</th></tr>
+            <tr><th>Hour</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Avg. Outside Temp</th></tr>
         </table>
         <br />
         <h2>Daily Usage (Last 30 Days)</h2>
         <table class="table table-striped table-bordered" id="dailyUsage">
-            <tr><th>Day</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Outside Temp</th></tr>
+            <tr><th>Day</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Avg. Outside Temp</th></tr>
         </table>
       </div>
     </div>
@@ -125,12 +149,28 @@
     highlightStroke: "rgba(0,255,0,1)",
   };
 
-  var tempColors =
+  var avgTempColors =
   {
     fillColor: "rgba(250,50,50,0.7)",
     strokeColor: "rgba(250,25,25,1)",
     highlightFill: "rgba(255,25,25,1)",
     highlightStroke: "rgba(255,0,0,1)",
+  };
+
+  var highTempColors =
+  {
+    fillColor: "rgba(250,200,50,0.5)",
+    strokeColor: "rgba(250,200,25,1)",
+    highlightFill: "rgba(255,200,25,1)",
+    highlightStroke: "rgba(255,200,0,1)",
+  };
+
+  var lowTempColors =
+  {
+    fillColor: "rgba(50,50,250,0.3)",
+    strokeColor: "rgba(25,25,250,1)",
+    highlightFill: "rgba(25,25,255,1)",
+    highlightStroke: "rgba(0,0,255,1)",
   };
 
   /* Chart Options */
@@ -144,6 +184,36 @@
   Chart.defaults.global.scaleLineColor = "#dddddd";
   Chart.defaults.global.scaleGridLineColor = "#cccccc";
   Chart.defaults.global.bezierCurveTension = 0;
+
+  jQuery.ajax({
+      type: "GET",
+      url: "/api/v1/temperature/today",
+      contentType: "application/json",
+      dataType: "json",
+      success: function(data)
+      {
+        var currentF = Math.round(data[0].CurrentTemperature * (9/5) + 32)
+        var lowF = Math.round(data[0].LowTemperature * (9/5) + 32)
+        var highF = Math.round(data[0].HighTemperature * (9/5) + 32)
+        $("#currentTemperature").append(data[0].CurrentTemperature + "C (" + currentF + "F)");
+        $("#todayLowTemperature").append(data[0].LowTemperature + "C (" + lowF + "F)");
+        $("#todayHighTemperature").append(data[0].HighTemperature + "C (" + highF + "F)");
+      }
+  });
+
+  jQuery.ajax({
+      type: "GET",
+      url: "/api/v1/temperature/yesterday",
+      contentType: "application/json",
+      dataType: "json",
+      success: function(data)
+      {
+        var lowF = Math.round(data[0].LowTemperature * (9/5) + 32)
+        var highF = Math.round(data[0].HighTemperature * (9/5) + 32)
+        $("#yesterdayLowTemperature").append(data[0].LowTemperature + "C (" + lowF + "F)");
+        $("#yesterdayHighTemperature").append(data[0].HighTemperature + "C (" + highF + "F)");
+      }
+  });
 
   jQuery.ajax({
       type: "GET",
@@ -195,6 +265,8 @@
     var gridKWH = [];
     var solarKWH = [];
     var avgTemp = [];
+    var highTemp = [];
+    var lowTemp = [];
 
     var totalUsedKWH = 0;
     var totalGridKWH = 0;
@@ -220,6 +292,8 @@
          gridKWH.push(this.GridKWH);
          solarKWH.push(this.SolarKWH);
          avgTemp.push(this.AvgTemp);
+         highTemp.push(this.HighTemp);
+         lowTemp.push(this.LowTemp);
 
          totalUsedKWH = totalUsedKWH + parseInt(this.UsedKWH);
          totalGridKWH = totalGridKWH + parseInt(this.GridKWH);
@@ -236,7 +310,7 @@
 
       drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, 'solarVsUsedPie');
       drawUsageGraph(day, usedKWH, solarKWH, 'dailyUsageGraph');
-      drawTempGraph(day, avgTemp, 'dailyTempGraph', 0.1);
+      drawFullTempGraph(day, avgTemp, highTemp, lowTemp, 'dailyTempGraph', 0.1);
     }
   }
 
@@ -385,16 +459,53 @@
       datasets: [
           {
               label: "Temperature",
-              fillColor: tempColors.fillColor,
-              strokeColor: tempColors.strokeColor,
-              highlightFill: tempColors.highlightFill,
-              highlightStroke: tempColors.highlightStroke,
+              fillColor: avgTempColors.fillColor,
+              strokeColor: avgTempColors.strokeColor,
+              highlightFill: avgTempColors.highlightFill,
+              highlightStroke: avgTempColors.highlightStroke,
               data: temp
           },
       ]
     };
     dailyUsageChart = new Chart(tempUsageGraph).Line(tempUsageData, options);
+  };
 
+  function drawFullTempGraph(labels, avgTemp, highTemp, lowTemp, element, curveTension)
+  {
+    var options = {
+      bezierCurveTension : curveTension,
+    }
+    var tempUsageGraph = document.getElementById(element).getContext('2d');
+    var tempUsageData = {
+      labels: labels,
+      datasets: [
+          {
+              label: "High",
+              fillColor: highTempColors.fillColor,
+              strokeColor: highTempColors.strokeColor,
+              highlightFill: highTempColors.highlightFill,
+              highlightStroke: highTempColors.highlightStroke,
+              data: highTemp
+          },
+          {
+              label: "Average",
+              fillColor: avgTempColors.fillColor,
+              strokeColor: avgTempColors.strokeColor,
+              highlightFill: avgTempColors.highlightFill,
+              highlightStroke: avgTempColors.highlightStroke,
+              data: avgTemp
+          },
+          {
+              label: "Low",
+              fillColor: lowTempColors.fillColor,
+              strokeColor: lowTempColors.strokeColor,
+              highlightFill: lowTempColors.highlightFill,
+              highlightStroke: lowTempColors.highlightStroke,
+              data: lowTemp
+          },
+      ]
+    };
+    dailyUsageChart = new Chart(tempUsageGraph).Line(tempUsageData, options);
   };
 
   function drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, element)

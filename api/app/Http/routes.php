@@ -20,6 +20,38 @@ $app->group(['prefix' => 'v1'], function($app)
 {
   DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
 
+  $app->get('/temperature/today', function()
+  {
+      $memcached = new Memcached();
+      $memcached->addServer('127.0.0.1', 11211);
+      $temperature = $memcached->get('SolarStats:outsideTemperature');
+      $memcached->quit();
+
+      if(!isset($temperature))
+        $temperature = 'Unknown';
+
+      $result = DB::select("SELECT
+        $temperature AS 'CurrentTemperature',
+        MIN(outsideTemperature) AS 'LowTemperature',
+        MAX(outsideTemperature) AS 'HighTemperature' FROM PowerUsage
+        WHERE logDate >= CONCAT(DATE(NOW()), ' 00:00:00') AND logDate <= NOW()");
+      return response()->json($result);
+  });
+
+  $app->get('/temperature/yesterday', function()
+  {
+      $result = DB::select("SELECT
+        MIN(outsideTemperature) AS 'LowTemperature',
+        MAX(outsideTemperature) AS 'HighTemperature' FROM PowerUsage
+        WHERE logDate >= CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 1 day)), ' 00:00:00') AND logDate <= NOW()");
+      return response()->json($result);
+  });
+
+  $app->get('/usage/current', function()
+  {
+    return response()->json(DB::select('SELECT * FROM UsageCurrent'));
+  });
+
   $app->get('/usage/average', function()
   {
     $where = "";

@@ -19,6 +19,9 @@ const int temperatureProbes = D3;
 /* Settings */
 const int sleepSeconds = 180;
 
+/* How many times to try and grab sensor data */
+const int max_attempts = 3;
+
 /*
  * -------
  * OBJECTS
@@ -50,7 +53,7 @@ http_header_t headers[] = {
  */
 
 bool sleep = false;
-double currentTemp = 0;
+double currentTemp = -255;
 
 //MAC Address
 byte mac[6];
@@ -117,14 +120,17 @@ void loop()
 
 boolean collectTemperatures()
 {
-  sensors.requestTemperatures();
-  if(sensors.getAddress(thermometer, 0))
+  for(int count = 0; count < max_attempts; ++count)
   {
-    currentTemp = sensors.getTempC(thermometer);
-    Serial.print("Current Temperature: ");
-    Serial.println(currentTemp);
-    return true;
+    sensors.requestTemperatures();
+    if(sensors.getAddress(thermometer, 0))
+    {
+      currentTemp = sensors.getTempC(thermometer);
+      Serial.print("Current Temperature: ");
+      Serial.println(currentTemp);
+      return true;
+    }
+    delay(1000);
   }
   return false;
 }
-

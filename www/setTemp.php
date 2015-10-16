@@ -1,6 +1,17 @@
 <?php
-    $m = new Memcached();
-    $m->addServer('localhost', 11211);
-    $m->set('SolarStats:outsideTemperature', $_GET['temp'], time() + 300);
-    echo "OK";
+    $temp = $_GET['temp'];
+
+    if($temp > -127)
+    {
+      $m = new Memcached();
+      $m->addServer('localhost', 11211);
+      $m->set('SolarStats:outsideTemperature', $_GET['temp'], time() + 600);
+      echo "OK";
+      exit(0);
+    }
+    else
+    {
+      echo "FAIL";
+      exit(1);
+    }
 ?>
