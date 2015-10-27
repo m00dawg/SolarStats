@@ -1,5 +1,4 @@
 DROP TABLE IF EXISTS PowerUsage;
-
 CREATE TABLE PowerUsage(
 	logDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	meterCounter bigint NOT NULL,
@@ -14,10 +13,20 @@ CREATE TABLE PowerUsage(
 
 INSERT INTO PowerUsage VALUES (NOW(), 0, 0, 0, 0, 0, NULL);
 
+DROP TABLE IF EXISTS UsageByDay;
+CREATE TABLE UsageByDay(
+		logDate DATE,
+		meterKWH float NOT NULL DEFAULT '0',
+	  solarKWH float NOT NULL DEFAULT '0',
+		usedKWH float AS (meterKWH + solarKWH) VIRTUAL,
+		lowOutsideTemperature decimal(4,2) DEFAULT NULL,
+		avgOutsideTemperature decimal(4,2) DEFAULT NULL,
+		highOutsideTemperature decimal(4,2) DEFAULT NULL,
+		PRIMARY KEY (logDate)
+)	ENGINE='InnoDB';
+
 DROP TRIGGER IF EXISTS CalcPowerUsageGauges;
-
 DELIMITER //
-
 CREATE TRIGGER CalcPowerUsageGauges BEFORE INSERT ON PowerUsage
   FOR EACH ROW
   BEGIN
@@ -60,5 +69,24 @@ CREATE TRIGGER CalcPowerUsageGauges BEFORE INSERT ON PowerUsage
 		END IF;
   END;
 //
+DELIMITER ;
 
+DROP TRIGGER IF EXISTS UpdateUsageByDay;
+DELIMITER //
+CREATE TRIGGER UpdateUsageByDay AFTER INSERT ON PowerUsage
+	FOR EACH ROW
+	BEGIN
+		REPLACE INTO UsageByDay
+			(logDate, meterKWH, solarKWH, lowOutsideTemperature, avgOutsideTemperature, highOutsideTemperature)
+		SELECT
+			DATE(NOW()),
+			SUM(meterKWH),
+			SUM(solarKWH),
+			MIN(outsideTemperature),
+			ROUND(AVG(outsideTemperature), 2),
+			MAX(outsideTemperature)
+		FROM PowerUsage
+		WHERE logDate > CONCAT(DATE(NOW()), ' 00:00:00');
+	END;
+//
 DELIMITER ;

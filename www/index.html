@@ -280,24 +280,24 @@
       {
         var f = Math.round(this.AvgTemp * (9/5) + 32)
         $("#dailyUsage").append(
-          "<tr><td>" + this.Day +
-          "</td><td>" + this.UsedKWH +
-          "</td><td>" + this.GridKWH +
-          "</td><td>" + this.SolarKWH +
-          "</td><td>" + this.AvgTemp + "C (" + f + "F)" +
+          "<tr><td>" + this.logDate +
+          "</td><td>" + this.usedKWH +
+          "</td><td>" + this.meterKWH +
+          "</td><td>" + this.solarKWH +
+          "</td><td>" + this.avgOutsideTemperature + "C (" + f + "F)" +
           "</td></tr>");
 
-         day.push(this.Day);
-         usedKWH.push(this.UsedKWH);
-         gridKWH.push(this.GridKWH);
-         solarKWH.push(this.SolarKWH);
-         avgTemp.push(this.AvgTemp);
-         highTemp.push(this.HighTemp);
-         lowTemp.push(this.LowTemp);
+         day.push(this.logDate);
+         usedKWH.push(this.usedKWH);
+         gridKWH.push(this.meterKWH);
+         solarKWH.push(this.solarKWH);
+         avgTemp.push(this.avgOutsideTemperature);
+         highTemp.push(this.highOutsideTemperature);
+         lowTemp.push(this.lowOutsideTemperature);
 
-         totalUsedKWH = totalUsedKWH + parseInt(this.UsedKWH);
-         totalGridKWH = totalGridKWH + parseInt(this.GridKWH);
-         totalSolarKWH = totalSolarKWH + parseInt(this.SolarKWH);
+         totalUsedKWH = totalUsedKWH + parseInt(this.usedKWH);
+         totalGridKWH = totalGridKWH + parseInt(this.meterKWH);
+         totalSolarKWH = totalSolarKWH + parseInt(this.solarKWH);
       });
 
       $("#dailyUsage").append(

@@ -1,5 +1,5 @@
-DROP VIEW IF EXISTS UsageByDay;
-CREATE VIEW UsageByDay AS
+DROP VIEW IF EXISTS UsageByDayView;
+CREATE VIEW UsageByDayView AS
 SELECT
 DATE(logDate) AS "Day",
 DAYOFWEEK(logDate) AS "Weekday",
@@ -20,10 +20,9 @@ MONTH(logDate) AS "Month",
 ROUND(SUM(meterKWH) + SUM(solarKWH), 3) AS "UsedKWH",
 ROUND(SUM(meterKWH), 3) AS "GridKWH",
 ROUND(SUM(solarKWH), 3) AS "SolarKWH",
-ROUND(AVG(outsideTemperature), 2) AS "AvgTemp"
-FROM PowerUsage
+ROUND(AVG(avgOutsideTemperature), 2) AS "AvgTemp"
+FROM UsageByDay
 GROUP BY YEAR(logDate), MONTH(logDate);
-
 
 DROP VIEW IF EXISTS AverageUsageByHour;
 CREATE VIEW AverageUsageByHour AS
@@ -59,7 +58,6 @@ ROUND(AVG(outsideTemperature), 2) AS "OutsideTemp"
 FROM PowerUsage
 WHERE logDate > CONCAT(DATE(NOW()), ' 00:00:00')
 GROUP BY DATE_FORMAT(logDate, '%Y-%m-%d %h:%i');
-
 
 DROP VIEW IF EXISTS TotalUsage;
 CREATE VIEW TotalUsage AS

@@ -65,7 +65,7 @@ $app->group(['prefix' => 'v1'], function($app)
       {
         if(isset($_GET['lastDays']))
             $result = DB::select('SELECT * FROM UsageByDay
-              WHERE Day >= DATE_SUB(NOW(), INTERVAL ? day)', [$_GET['lastDays']]);
+              WHERE logDate >= DATE_SUB(NOW(), INTERVAL ? day)', [$_GET['lastDays']]);
         else
           $result = DB::select('SELECT * FROM UsageByDay');
         break;
