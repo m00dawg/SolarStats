@@ -1,7 +1,7 @@
 <?php
     $temp = $_GET['temp'];
 
-    if($temp > -127)
+    if($temp > -127 && $temp < 85)
     {
       $m = new Memcached();
       $m->addServer('localhost', 11211);
