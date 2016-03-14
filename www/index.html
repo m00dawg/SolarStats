@@ -131,6 +131,9 @@
     strokeColor: "rgba(250,120,120,0.9)",
     highlightFill: "rgba(255,25,25,1)",
     highlightStroke: "rgba(255,0,0,1)",
+    surplusFillColor: "rgba(250,250,0,0.7)",
+    surplusHighlightFill: "rgba(255,255,25,1)",
+
   };
 
   var usageColors =
@@ -510,12 +513,23 @@
 
   function drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, element)
   {
+    if(totalGridKWH >= 0)
+    {
+      var gridFillColor = gridColors.fillColor;
+      var gridHighlightFillColor = gridColors.highlightFill;
+    }
+    else
+    {
+      var gridFillColor = gridColors.surplusFillColor;
+      var gridHighlightFillColor = gridColors.surplusHighlightFill;
+    }
+
     var solarVsUsagePie = document.getElementById(element).getContext('2d');
     var solarVsUsageData = [
       {
         value: totalGridKWH,
-        color: gridColors.fillColor,
-        highlight: gridColors.highlightFill,
+        color: gridFillColor,
+        highlight: gridHighlightFillColor,
         label: "Grid"
       },
       {
