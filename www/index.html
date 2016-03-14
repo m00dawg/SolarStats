@@ -278,7 +278,7 @@
     {
       $.each(data, function()
       {
-        var f = Math.round(this.AvgTemp * (9/5) + 32)
+        var f = Math.round(this.avgOutsideTemperature * (9/5) + 32)
         $("#dailyUsage").append(
           "<tr><td>" + this.logDate +
           "</td><td>" + this.usedKWH +
