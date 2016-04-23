@@ -37,8 +37,8 @@ const byte WDIR = A0;
 
 // Other Constants
 // How many loops through sleep/wakeup to wait before we check sensors and transmit results
-const int sleepCycles = 7;
-//const int sleepCycles = 0;
+//const int sleepCycles = 7;
+const int sleepCycles = 1;
 
 //Global Variables
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -158,7 +158,13 @@ void wspeedIRQ()
 
 void setup()
 {
-	Serial.begin(9600);
+	//Serial.begin(9600);
+  Serial.begin(115200);
+
+  //For Xbee PRO to bypass the bootloader
+  //Serial.write('\r');
+  //delay(2000);
+ 
 	Serial.println("SolarWeather");
 
 	//pinMode(STAT1, OUTPUT); //Status LED Blue
@@ -209,8 +215,8 @@ void setup()
 	Serial.println("Weather Shield online!");
 
   // Hang out for a while in case we want to update the firmware before we start sleeping
-  Serial.println("Waiting 10 seconds for firmware update if desired");
-  delay(10000);
+  Serial.println("Waiting 5 seconds for firmware update if desired");
+  delay(5000);
 }
 
 void loop()
@@ -267,7 +273,10 @@ void loop()
  */
 
   if(currentSleepCycle >= sleepCycles)
+  {
+    currentSleepCycle = 0;
     printWeather();
+  }
   else
   {
     Serial.println("DEBUG - Looping for Sleep Cycle");

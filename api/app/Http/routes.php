@@ -95,7 +95,8 @@ $app->group(['prefix' => 'v1'], function($app)
     {
       case 'yesterday':
       {
-        $where = "logDate >= CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 1 day)), ' 00:00:00')";
+        $where = "logDate >= CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 1 day)), ' 00:00:00')
+                  AND logDate < CONCAT(DATE(NOW()), ' 00:00:00')";
         break;
       }
       case 'thisMonth':
