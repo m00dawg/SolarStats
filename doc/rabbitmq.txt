@@ -1,0 +1,25 @@
+RabbitMQ
+--------
+
+Weather
+=======
+
+Arduino/XBee
+^^^^^^^^^^^^^
+
+Producer:
+    * Daemon Listener
+    * Serial Interface
+    * On Event, Validate Input (e.g. Temp within reasonable range)
+    * Timestamp (if needed?)
+    * Toss into RMQ
+
+Consumer:
+    * Runs periodically (cron?), ideally when queue may be large enough
+      to justify a bulk insert, but short enough to be useful
+      + Or, can process data immediately, but store into a
+        memory table? Which is faster?
+        Memory table would be more work overall when we already have
+        storage view Rabbit, but makes for more realtime stats
+        on the app side.
+      + PHP seems to kinda suck for this, maybe also do this in C?

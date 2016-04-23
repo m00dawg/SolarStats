@@ -1,0 +1,23 @@
+Collectors
+==========
+
+EV
+--
+
+  * Hit EV API at set intervals
+  * Toss results into RabbitMQ
+  * Read last value (in memcached), store in memcached delta for instance
+    usage stats
+  * Write new delta, new raw data
+
+Temp - Spark
+------------
+
+  * Push to RabbitMQ
+  * Two consumers
+    + One updates memcached (for latest stats on website)
+    + One is a standard queue for bulk inserts into MariaDB
+    + Done this way so Spark only has to worry about sending to
+      RabbitMQ and not also to memcached.
+    + Alternative to have Spark do both might be ok (if we have enough memory)
+  

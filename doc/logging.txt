@@ -1,0 +1,49 @@
+Logging Plan
+------------
+
+RRD:
+  * 1 RRD for Power Usage
+  * 1 RRD per sensor for weather
+
+Power Usage
+===========
+
+Raw Logging
+^^^^^^^^^^^
+  * Raw data is in the form of a counter
+  * Need to compute rate of change based on last sample
+  * Precise timing not required
+  * Grab data as often as we like
+  * Buffer into RabbitMQ
+    + For RRD, if used, can store immediately
+    + For DB, store after queue is above a certain length
+      - For better bulk insert performance
+      - Align to seconds (throw out any sub-second records)
+
+Interval Logging
+^^^^^^^^^^^^^^^^
+  * Are "Last 24 Hour" type tables required (ala RRD)
+
+Raw Display
+^^^^^^^^^^^
+  * For same day stats, can just group by the preferred interval
+    + Should check on performance of GROUP BY with time filtering functions
+    + Less critical if graphing agent is date-aware
+    + Or, can we use a windowing function here?
+    + Can also do some calc (min, max, avg) in app or api?
+
+Historical Tables
+^^^^^^^^^^^^^^^^^
+  * Size permitting, store full data in history tables (1 table/year)
+  * Store per-day statistics (1 table/year)
+
+Weather
+=======
+
+Raw Logging
+^^^^^^^^^^^
+  * Data is as-is (no need for deltas)
+  * For both Arduino and Spark, grab data as it comes in
+  * Buffer into RabbitMQ
+  * Store after queue is above a certain length
+    + For better bulk insert performance

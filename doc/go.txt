@@ -1,0 +1,14 @@
+Setting stuff up with Go
+
+Serial Libs:
+https://github.com/jacobsa/go-serial/blob/master/go-serial-test/go-serial-test.go
+https://github.com/tarm/serial
+
+Rabbit:
+https://www.rabbitmq.com/tutorials/tutorial-one-go.html
+
+Memcached:
+https://github.com/bradfitz/gomemcache/
+
+MariaDB:
+https://mariadb.com/blog/using-go-mariadb
