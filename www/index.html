@@ -53,7 +53,6 @@
       <div class="col-md-2">
         <h3>Yesterday</h3>
         <ul>
-
           <li><strong>Low</strong>: <span id="yesterdayLowTemperature"></span></li>
           <li><strong>High</strong>: <span id="yesterdayHighTemperature"></span></li>
         </ul>
@@ -65,15 +64,16 @@
       <div class="row placeholders">
         <div class="col-md-4">
             <h2>30 Days</h2>
-            <canvas id="solarVsUsedPie"></canvas>
+            <div id="solarVsUsedPie"></div>
+<!--             <canvas id="solarVsUsedPie"></canvas> -->
         </div>
         <div class="col-md-4">
             <h2>Yesterday</h2>
-            <canvas id="solarVsUsedPieYesterday"></canvas>
+            <div id="solarVsUsedPieYesterday"></div>
         </div>
         <div class="col-md-4">
             <h2>Today</h2>
-            <canvas id="solarVsUsedPieToday"></canvas>
+            <div id="solarVsUsedPieToday"></div>
         </div>
       </div>
 
@@ -81,23 +81,29 @@
       <br />
       <div class="row">
         <h1 class="page-header" id="fancyCharts">Fancy Charts</h1>
-        <h2>Average Hourly Usage</h2>
+        <h2>Latest Usage</h2>
+
+        Number of Days: <input name="rawDaysInput" id="rawDaysInput" value="1" size="3" onsubmit="updateRaw();" />
+        <button value="Update" onclick="updateRaw();">Update</button>
+        <div id="latestUsageGraph" width="90" height="25"></div>
+        <!--
         <h3>Usage and Solar</h3>
         <canvas id="averageHourlyUsageGraph" width="90" height="25"></canvas>
         <h3>Temperature</h3>
         <canvas id="averageHourlyTempGraph" width="90" height="25"></canvas>
+      -->
+
+
 
         <h2>Monthly Usage</h2>
         <h3>Usage and Solar</h3>
-        <canvas id="monthlyUsageGraph" width="90" height="25"></canvas>
-        <h3>Temperature</h3>
-        <canvas id="monthlyTempGraph" width="90" height="25"></canvas>
+        <div id="monthlyUsageGraph" width="90" height="25"></div>
 
         <h2>Daily Usage (Last 30 Days)</h2>
         <h3>Usage and Solar</h3>
-        <canvas id="dailyUsageGraph" width="90" height="25"></canvas>
+        <div id="dailyUsageGraph" width="90" height="25"></div>
         <h3>Temperature</h3>
-        <canvas id="dailyTempGraph" width="90" height="25"></canvas>
+        <div id="dailyTempGraph" width="90" height="25"></div>
 
         <br />
         <br />
@@ -106,11 +112,13 @@
         <table class="table table-striped table-bordered" id="monthlyUsage">
             <tr><th>Month</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Avg. Outside Temp</th></tr>
         </table>
+        <!--
         <h2>Average Hourly Usage</h2>
         <table class="table table-striped table-bordered" id="averageHourlyUsage">
             <tr><th>Hour</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Avg. Outside Temp</th></tr>
         </table>
         <br />
+      -->
         <h2>Daily Usage (Last 30 Days)</h2>
         <table class="table table-striped table-bordered" id="dailyUsage">
             <tr><th>Day</th><th>Used kWH</th><th>Grid kWH</th><th>Solar kWH</th><th>Avg. Outside Temp</th></tr>
@@ -121,429 +129,12 @@
 </div>
 
 <script src="js/jquery-2.1.4.min.js"></script>
-<script src="js/Chart.min.js"></script>
+<script src="js/highcharts/js/highcharts.js"></script>
 <script src="bootstrap/js/bootstrap.min.js"></script>
 
-<script>
-  var gridColors =
-  {
-    fillColor: "rgba(250,120,120,0.7)",
-    strokeColor: "rgba(250,120,120,0.9)",
-    highlightFill: "rgba(255,25,25,1)",
-    highlightStroke: "rgba(255,0,0,1)",
-    surplusFillColor: "rgba(0,100,0,0.7)",
-    surplusHighlightFill: "rgba(0,200,0,1)",
+<script src="js/charts.js"></script>
+<script src="js/ajax.js"></script>
 
-  };
-
-  var usageColors =
-  {
-    fillColor: "rgba(120,120,250,0.4)",
-    strokeColor: "rgba(120,120,250,0.6)",
-    highlightFill: "rgba(50,50,255,1)",
-    highlightStroke: "rgba(0,0,255,1)",
-  };
-
-  var solarColors =
-  {
-    fillColor: "rgba(25,250,25,0.8)",
-    strokeColor: "rgba(25,250,25,0.9)",
-    highlightFill: "rgba(25,255,25,1)",
-    highlightStroke: "rgba(0,255,0,1)",
-  };
-
-  var avgTempColors =
-  {
-    fillColor: "rgba(250,50,50,0.7)",
-    strokeColor: "rgba(250,25,25,1)",
-    highlightFill: "rgba(255,25,25,1)",
-    highlightStroke: "rgba(255,0,0,1)",
-  };
-
-  var highTempColors =
-  {
-    fillColor: "rgba(250,200,50,0.5)",
-    strokeColor: "rgba(250,200,25,1)",
-    highlightFill: "rgba(255,200,25,1)",
-    highlightStroke: "rgba(255,200,0,1)",
-  };
-
-  var lowTempColors =
-  {
-    fillColor: "rgba(50,50,250,0.3)",
-    strokeColor: "rgba(25,25,250,1)",
-    highlightFill: "rgba(25,25,255,1)",
-    highlightStroke: "rgba(0,0,255,1)",
-  };
-
-  /* Chart Options */
-  Chart.defaults.global.animation = false;
-  Chart.defaults.global.animationSteps = 10;
-  Chart.defaults.global.responsive = true;
-  Chart.defaults.global.maintainAspectRatio = true;
-  Chart.defaults.global.tooltipTitleFontSize = 14;
-  Chart.defaults.global.tooltipFontSize = 12;
-  Chart.defaults.global.scaleFontColor = "#444444";
-  Chart.defaults.global.scaleLineColor = "#dddddd";
-  Chart.defaults.global.scaleGridLineColor = "#cccccc";
-  Chart.defaults.global.bezierCurveTension = 0;
-
-  jQuery.ajax({
-      type: "GET",
-      url: "/api/v1/temperature/today",
-      contentType: "application/json",
-      dataType: "json",
-      success: function(data)
-      {
-        var currentF = Math.round(data[0].CurrentTemperature * (9/5) + 32)
-        var lowF = Math.round(data[0].LowTemperature * (9/5) + 32)
-        var highF = Math.round(data[0].HighTemperature * (9/5) + 32)
-        $("#currentTemperature").append(data[0].CurrentTemperature + "C (" + currentF + "F)");
-        $("#todayLowTemperature").append(data[0].LowTemperature + "C (" + lowF + "F)");
-        $("#todayHighTemperature").append(data[0].HighTemperature + "C (" + highF + "F)");
-      }
-  });
-
-  jQuery.ajax({
-      type: "GET",
-      url: "/api/v1/temperature/yesterday",
-      contentType: "application/json",
-      dataType: "json",
-      success: function(data)
-      {
-        var lowF = Math.round(data[0].LowTemperature * (9/5) + 32)
-        var highF = Math.round(data[0].HighTemperature * (9/5) + 32)
-        $("#yesterdayLowTemperature").append(data[0].LowTemperature + "C (" + lowF + "F)");
-        $("#yesterdayHighTemperature").append(data[0].HighTemperature + "C (" + highF + "F)");
-      }
-  });
-
-  jQuery.ajax({
-      type: "GET",
-      url: "/api/v1/usage/average?timeframe=day&lastDays=30",
-      contentType: "application/json",
-      dataType: "json",
-      success: displayUsageByDay,
-  });
-
-  jQuery.ajax({
-      type: "GET",
-      url: "/api/v1/usage/average?timeframe=month",
-      contentType: "application/json",
-      dataType: "json",
-      success: displayUsageByMonth,
-  });
-
-  jQuery.ajax({
-      type: "GET",
-      url: "/api/v1/usage/average?timeframe=hour",
-      contentType: "application/json",
-      dataType: "json",
-      success: displayAverageUsageByHour,
-  });
-
-  jQuery.ajax({
-      type: "GET",
-      url: "/api/TodaysUsageByHour",
-      contentType: "application/json",
-      dataType: "json",
-      success: displayTodaysUsage,
-  });
-
-  jQuery.ajax({
-      type: "GET",
-      url: "/api/v1/usage/total?timeframe=yesterday",
-      contentType: "application/json",
-      dataType: "json",
-      success: function(data)
-      {
-        drawSolarVsUsedPie(data[0].GridKWH, data[0].SolarKWH, 'solarVsUsedPieYesterday');
-      },
-  });
-
-  function displayUsageByDay(data, status, jqXHR)
-  {
-    var day = []
-    var usedKWH = [];
-    var gridKWH = [];
-    var solarKWH = [];
-    var avgTemp = [];
-    var highTemp = [];
-    var lowTemp = [];
-
-    var totalUsedKWH = 0;
-    var totalGridKWH = 0;
-    var totalSolarKWH = 0;
-
-    if(data.length == 0)
-      $("#dailyUsage").append("<tr><td colspan='5'>No Data Found</td></tr>");
-    else
-    {
-      $.each(data, function()
-      {
-        var f = Math.round(this.avgOutsideTemperature * (9/5) + 32)
-        $("#dailyUsage").append(
-          "<tr><td>" + this.logDate +
-          "</td><td>" + this.usedKWH +
-          "</td><td>" + this.meterKWH +
-          "</td><td>" + this.solarKWH +
-          "</td><td>" + this.avgOutsideTemperature + "C (" + f + "F)" +
-          "</td></tr>");
-
-         day.push(this.logDate);
-         usedKWH.push(this.usedKWH);
-         gridKWH.push(this.meterKWH);
-         solarKWH.push(this.solarKWH);
-         avgTemp.push(this.avgOutsideTemperature);
-         highTemp.push(this.highOutsideTemperature);
-         lowTemp.push(this.lowOutsideTemperature);
-
-         totalUsedKWH = totalUsedKWH + parseInt(this.usedKWH);
-         totalGridKWH = totalGridKWH + parseInt(this.meterKWH);
-         totalSolarKWH = totalSolarKWH + parseInt(this.solarKWH);
-      });
-
-      $("#dailyUsage").append(
-        "<tr><th>Total</th>" +
-        "<td>" + totalUsedKWH + "</td>" +
-        "<td>" + totalGridKWH + "</td>" +
-        "<td>" + totalSolarKWH +
-        "<td></td>" +
-        "</td></tr>");
-
-      drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, 'solarVsUsedPie');
-      drawUsageGraph(day, usedKWH, solarKWH, 'dailyUsageGraph');
-      drawFullTempGraph(day, avgTemp, highTemp, lowTemp, 'dailyTempGraph', 0.1);
-    }
-  }
-
-    function displayUsageByMonth(data, status, jqXHR)
-    {
-      var month = [];
-      var usedKWH = [];
-      var gridKWH = [];
-      var solarKWH = [];
-      var avgTemp = [];
-
-      var totalUsedKWH = 0;
-      var totalGridKWH = 0;
-      var totalSolarKWH = 0;
-
-      if(data.length == 0)
-        $("#monthlyUsage").append("<tr><td colspan='5'>No Data Found</td></tr>");
-      else
-      {
-        $.each(data, function()
-        {
-          var f = Math.round(this.AvgTemp * (9/5) + 32)
-          $("#monthlyUsage").append(
-            "<tr><td>" + this.Month +
-            "</td><td>" + this.UsedKWH +
-            "</td><td>" + this.GridKWH +
-            "</td><td>" + this.SolarKWH +
-            "</td><td>" + this.AvgTemp + "C (" + f + "F)" +
-            "</td></tr>");
-
-           month.push(this.Year + "-" + this.Month);
-           usedKWH.push(this.UsedKWH);
-           gridKWH.push(this.GridKWH);
-           solarKWH.push(this.SolarKWH);
-           avgTemp.push(this.AvgTemp);
-
-           totalUsedKWH = totalUsedKWH + parseInt(this.UsedKWH);
-           totalGridKWH = totalGridKWH + parseInt(this.GridKWH);
-           totalSolarKWH = totalSolarKWH + parseInt(this.SolarKWH);
-        });
-
-        $("#monthlyUsage").append(
-          "<tr><th>Total</th>" +
-          "<td>" + totalUsedKWH + "</td>" +
-          "<td>" + totalGridKWH + "</td>" +
-          "<td>" + totalSolarKWH +
-          "<td></td>" +
-          "</td></tr>");
-
-        //drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, 'solarVsUsedPie');
-        drawUsageGraph(month, usedKWH, solarKWH, 'monthlyUsageGraph');
-        drawTempGraph(month, avgTemp, 'monthlyTempGraph', 0.1);
-      }
-    }
-
-  function displayAverageUsageByHour(data, status, jqXHR)
-  {
-    var hour = []
-    var usedKWH = [];
-    var gridKWH = [];
-    var solarKWH = [];
-    var outsideTemp = [];
-
-    if(data.length == 0)
-      $("#averageHourlyUsage").append("<tr><td colspan='5'>No Data Found</td></tr>");
-    else
-    {
-      $.each(data, function()
-      {
-        var f = Math.round(this.OutsideTemp * (9/5) + 32)
-        $("#averageHourlyUsage").append(
-          "<tr><td>" + this.Hour +
-          "</td><td>" + this.UsedKWH +
-          "</td><td>" + this.GridKWH +
-          "</td><td>" + this.SolarKWH +
-          "</td><td>" + this.OutsideTemp + "C (" + f + "F)" +
-          "</td></tr>");
-
-         hour.push(this.Hour);
-         usedKWH.push(this.UsedKWH);
-         gridKWH.push(this.GridKWH);
-         solarKWH.push(this.SolarKWH);
-         outsideTemp.push(this.OutsideTemp);
-      });
-      drawUsageGraph(hour, usedKWH, solarKWH, 'averageHourlyUsageGraph');
-      drawTempGraph(hour, outsideTemp, 'averageHourlyTempGraph', 0.3);
-      //drawAverageHourlyUsageGraph(hour, usedKWH, solarKWH);
-    }
-  }
-
-  function displayTodaysUsage(data, status, jqXHR)
-  {
-    var totalUsedKWH = 0;
-    var totalGridKWH = 0;
-    var totalSolarKWH = 0;
-
-    if(data.length == 0)
-      { }
-    else
-    {
-      $.each(data, function()
-      {
-         totalGridKWH = totalGridKWH + parseFloat(this.GridKWH);
-         totalUsedKWH = totalUsedKWH + parseFloat(this.UsedKWH);
-         totalSolarKWH = totalSolarKWH + parseFloat(this.SolarKWH);
-      });
-      drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, 'solarVsUsedPieToday');
-    }
-  }
-
-  function drawUsageGraph(labels, usedKWH, solarKWH, element)
-  {
-    var dailyUsageGraph = document.getElementById(element).getContext('2d');
-    var dailyUsageData = {
-      labels: labels,
-      datasets: [
-          {
-              label: "Used kWH",
-              fillColor: usageColors.fillColor,
-              strokeColor: usageColors.strokeColor,
-              highlightFill: usageColors.highlightFill,
-              highlightStroke: usageColors.highlightStroke,
-              data: usedKWH
-          },
-          {
-              label: "Solar kWH",
-              fillColor: solarColors.fillColor,
-              strokeColor: solarColors.strokeColor,
-              highlightFill: solarColors.highlightFill,
-              highlightStroke: solarColors.highlightStroke,
-              data: solarKWH
-          },
-      ]
-    };
-    dailyUsageChart = new Chart(dailyUsageGraph).Bar(dailyUsageData);
-  };
-
-  function drawTempGraph(labels, temp, element, curveTension)
-  {
-    var options = {
-      bezierCurveTension : curveTension,
-    }
-    var tempUsageGraph = document.getElementById(element).getContext('2d');
-    var tempUsageData = {
-      labels: labels,
-      datasets: [
-          {
-              label: "Temperature",
-              fillColor: avgTempColors.fillColor,
-              strokeColor: avgTempColors.strokeColor,
-              highlightFill: avgTempColors.highlightFill,
-              highlightStroke: avgTempColors.highlightStroke,
-              data: temp
-          },
-      ]
-    };
-    dailyUsageChart = new Chart(tempUsageGraph).Line(tempUsageData, options);
-  };
-
-  function drawFullTempGraph(labels, avgTemp, highTemp, lowTemp, element, curveTension)
-  {
-    var options = {
-      bezierCurveTension : curveTension,
-    }
-    var tempUsageGraph = document.getElementById(element).getContext('2d');
-    var tempUsageData = {
-      labels: labels,
-      datasets: [
-          {
-              label: "High",
-              fillColor: highTempColors.fillColor,
-              strokeColor: highTempColors.strokeColor,
-              highlightFill: highTempColors.highlightFill,
-              highlightStroke: highTempColors.highlightStroke,
-              data: highTemp
-          },
-          {
-              label: "Average",
-              fillColor: avgTempColors.fillColor,
-              strokeColor: avgTempColors.strokeColor,
-              highlightFill: avgTempColors.highlightFill,
-              highlightStroke: avgTempColors.highlightStroke,
-              data: avgTemp
-          },
-          {
-              label: "Low",
-              fillColor: lowTempColors.fillColor,
-              strokeColor: lowTempColors.strokeColor,
-              highlightFill: lowTempColors.highlightFill,
-              highlightStroke: lowTempColors.highlightStroke,
-              data: lowTemp
-          },
-      ]
-    };
-    dailyUsageChart = new Chart(tempUsageGraph).Line(tempUsageData, options);
-  };
-
-  function drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, element)
-  {
-    if(totalGridKWH >= 0)
-    {
-      var gridFillColor = gridColors.fillColor;
-      var gridHighlightFillColor = gridColors.highlightFill;
-    }
-    else
-    {
-      var gridFillColor = gridColors.surplusFillColor;
-      var gridHighlightFillColor = gridColors.surplusHighlightFill;
-    }
-
-    var solarVsUsagePie = document.getElementById(element).getContext('2d');
-    var solarVsUsageData = [
-      {
-        value: totalGridKWH,
-        color: gridFillColor,
-        highlight: gridHighlightFillColor,
-        label: "Grid"
-      },
-      {
-        value: totalSolarKWH,
-        color: solarColors.fillColor,
-        highlight: solarColors.highlightFill,
-        label: "Solar"
-      }
-    ];
-
-    solarVsUsagePieChart = new Chart(solarVsUsagePie).Pie(solarVsUsageData);
-  };
-
-</script>
 </body>
 
 </html>

@@ -13,9 +13,10 @@ if($memcached->get('SolarStats:outsideTemperature'))
 else
     $temperature = null;
 $mysqli->query("SET SQL_MODE='TRADITIONAL'");
-#$stmt = $mysqli->prepare("INSERT INTO PowerUsage (meterCounter, solarCounter, outsideTemperature) VALUES (?, ?, ?)");
-$stmt = $mysqli->prepare("INSERT INTO PowerUsageRaw (meterCounter, solarCounter, outsideTemperature) VALUES (?, ?, ?)")
+$stmt = $mysqli->prepare("INSERT INTO PowerUsage (meterCounter, solarCounter, outsideTemperature) VALUES (?, ?, ?)")
     or die($mysqli->error);
+#$stmt = $mysqli->prepare("INSERT INTO PowerUsageRaw (meterCounter, solarCounter, outsideTemperature) VALUES (?, ?, ?)")
+#    or die($mysqli->error);
 $stmt->bind_param('iid', $power->r[0]->v, $power->r[1]->v, $temperature);
 $stmt->execute();
 $stmt->close();

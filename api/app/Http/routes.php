@@ -47,10 +47,23 @@ $app->group(['prefix' => 'v1'], function($app)
       return response()->json($result);
   });
 
+  $app->get('/usage/raw', function()
+  {
+    $days = 1;
+    if(isset($_GET['days']))
+      if($_GET['days'] > 0)
+        $days = $_GET['days'];
+
+    return response()->json(DB::select('SELECT UNIX_TIMESTAMP(logDate) AS logDate, meterGauge, solarGauge, outsideTemperature
+      FROM PowerUsage
+      WHERE logDate >= DATE_SUB(NOW(), INTERVAL ? day)', [$days]));
+  });
+
   $app->get('/usage/current', function()
   {
     return response()->json(DB::select('SELECT * FROM UsageCurrent'));
   });
+
 
   $app->get('/usage/average', function()
   {
