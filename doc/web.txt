@@ -1,0 +1,4 @@
+Chart Library to try:
+  http://nvd3.org/examples/pie.html
+  http://www.highcharts.com/demo/spline-irregular-time
+  Supports overlays (e.g. temp + power usage graphs)
