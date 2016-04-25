@@ -1,3 +1,11 @@
+DROP VIEW IF EXISTS UsageCurrent;
+CREATE VIEW UsageCurrent AS
+SELECT 
+meterGauge + solarGauge AS 'usedGauge',
+meterGauge, solarGauge, outsideTemperature
+FROM PowerUsage
+WHERE logDate = (SELECT MAX(logDate) FROM PowerUsage);
+
 DROP VIEW IF EXISTS UsageByDayView;
 CREATE VIEW UsageByDayView AS
 SELECT

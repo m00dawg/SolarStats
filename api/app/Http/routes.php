@@ -19,6 +19,7 @@ $app->get('/', function() use ($app) {
 $app->group(['prefix' => 'v1'], function($app)
 {
   DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
+  DB::statement("SET SQL_MODE='TRADITIONAL'");
 
   $app->get('/temperature/today', function()
   {
@@ -63,7 +64,6 @@ $app->group(['prefix' => 'v1'], function($app)
   {
     return response()->json(DB::select('SELECT * FROM UsageCurrent'));
   });
-
 
   $app->get('/usage/average', function()
   {

@@ -58,18 +58,6 @@ var lowTempColors =
   highlightStroke: "rgba(0,0,255,1)",
 };
 
-/* Chart Options */
-Chart.defaults.global.animation = false;
-Chart.defaults.global.animationSteps = 10;
-Chart.defaults.global.responsive = true;
-Chart.defaults.global.maintainAspectRatio = true;
-Chart.defaults.global.tooltipTitleFontSize = 14;
-Chart.defaults.global.tooltipFontSize = 12;
-Chart.defaults.global.scaleFontColor = "#444444";
-Chart.defaults.global.scaleLineColor = "#dddddd";
-Chart.defaults.global.scaleGridLineColor = "#cccccc";
-Chart.defaults.global.bezierCurveTension = 0;
-
 Highcharts.setOptions({
   global: {
     useUTC: false,
@@ -496,5 +484,60 @@ function drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, element)
   },
   series: solarVsUsageData,
  });
-  //solarVsUsagePieChart = new Chart(solarVsUsagePie).Pie(solarVsUsageData);
 };
+
+
+function displayCurrentEnergy(data, status, jqXHR)
+{
+  var meterGauge = parseFloat(data[0].meterGauge);
+  drawMeterUsageBar(meterGauge, 'currentEnergyUsage');
+}
+
+/*
+function drawMeterUsageBar(meterGauge, element)
+{
+  var gauge = -meterGauge;  // Invert because - values mean energy surplus
+  var color = solarColors.fillColor;
+
+  if(gauge <= 0)
+    color = gridColors.fillColor;
+
+  var MeterUsageBarGraph = new Highcharts.Chart(
+  {
+
+    chart: {
+      renderTo: element,
+    },
+
+    yAxis:
+    {
+      title: {
+        text: 'Watts',
+      },
+      allowDecimals: false,
+      //min: 0,
+      //startOnTick: true,
+      //endOnTick: true,
+      //minPadding: 0.02,
+      //maxPadding: 0.02,
+    },
+    legend: {
+      enabled: false,
+    },
+    title: {
+      text: null,
+    },
+    credits: {
+      enabled: false,
+    },
+    series: [
+      {
+        type: 'column',
+        name: 'Meter',
+        data: [gauge],
+        color: color,
+      },
+    ]
+   });
+}
+*/

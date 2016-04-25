@@ -25,6 +25,30 @@ setInterval(function()
   updateCurrentTemp();
 }, 60000);
 
+function updateCurrentEnergy()
+{
+  jQuery.ajax({
+    type: "GET",
+    url: "/api/v1/usage/current",
+    contentType: "application/json",
+    dataType: "json",
+    success: function(data)
+    {
+      $("#currentUsageWatts").empty();
+      $("#currentSolarWatts").empty();
+      $("#currentGridWatts").empty();
+      $("#currentUsageWatts").append(data[0].usedGauge);
+      $("#currentSolarWatts").append(data[0].solarGauge);
+      $("#currentGridWatts").append(data[0].meterGauge);
+    }
+  });
+}
+updateCurrentEnergy();
+setInterval(function()
+{
+  updateCurrentEnergy();
+}, 60000);
+
 
 jQuery.ajax({
     type: "GET",

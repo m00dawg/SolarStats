@@ -29,8 +29,8 @@
 
     <div class="col-sm-3 col-md-2 sidebar">
      <ul class="nav nav-sidebar">
-      <li><a href="#weather">Weather <span class="sr-only">(current)</span></a></li>
-       <li><a href="#solarVsUsage">Solar vs Usage <span class="sr-only">(current)</span></a></li>
+      <li><a href="#current">Current Info</a></li>
+       <li><a href="#solarVsUsage">Solar vs Usage</span></a></li>
        <li><a href="#fancyCharts">Fancy Charts</a></li>
        <li><a href="#rawData">Raw Data</a></li>
      </ul>
@@ -38,24 +38,56 @@
 
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
       <br />
-      <h1 class="page-header" id="weather">Weather</h1>
-      <h2>Temperature</h2>
-      <div class="row">
+      <h1 class="page-header" id="current">Current Information</h1>
 
-      <div class="col-md-2">
-        <h3>Today</h3>
-        <ul>
-          <li><strong>Low</strong>: <span id="todayLowTemperature"></span></li>
-          <li><strong>High</strong>: <span id="todayHighTemperature"></span></li>
-          <li><strong>Current</strong>: <span id="currentTemperature"></span></li>
-        </ul>
+      <div class="row">
+      <div class="col-md-7">
+        <h2>Temperature</h2>
+        <div>
+          <table class="table">            
+            <tr>
+                <thead>
+                <th colspan="2">Today</th>
+                <th colspan="2">Yesterday</th>
+                </thead>
+            </tr>
+            <tr>
+                <th>Low</th>
+                <td><span id="todayLowTemperature"></span></td>
+                <th>Low</th>
+                <td><span id="yesterdayLowTemperature"></span></td>
+            </tr>
+            <tr>
+                <th>High</th>
+                <td><span id="todayHighTemperature"></span></td>
+                <th>High</th>
+                <td><span id="yesterdayHighTemperature"></span></td>
+            </tr>
+            <tr>
+                <th>Current</th>
+                <td><span id="currentTemperature"></span></td>
+                <th></th>
+                <td></td>
+            </tr>
+          </table>
+        </div>
       </div>
-      <div class="col-md-2">
-        <h3>Yesterday</h3>
-        <ul>
-          <li><strong>Low</strong>: <span id="yesterdayLowTemperature"></span></li>
-          <li><strong>High</strong>: <span id="yesterdayHighTemperature"></span></li>
-        </ul>
+      <div class="col-md-5">
+          <h2>Energy</h2>
+          <table class="table" id="currentEnergyUsage">
+            <tr>
+              <th>Usage</th>
+              <td style="text-align: right;"><span id="currentUsageWatts"></span> Watts</td>
+            </tr>
+            <tr>
+              <th>Solar</th>
+              <td style="text-align: right;"><span id="currentSolarWatts"></span> Watts</td>
+            </tr>
+            <tr>
+              <th>Grid</th>
+              <td style="text-align: right;"><span id="currentGridWatts"></span> Watts</td>
+            </tr>
+          </table>
       </div>
     </div>
       <br />
