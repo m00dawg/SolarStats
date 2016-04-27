@@ -37,9 +37,9 @@ function updateCurrentEnergy()
       $("#currentUsageWatts").empty();
       $("#currentSolarWatts").empty();
       $("#currentGridWatts").empty();
-      $("#currentUsageWatts").append(data[0].usedGauge);
-      $("#currentSolarWatts").append(data[0].solarGauge);
-      $("#currentGridWatts").append(data[0].meterGauge);
+      $("#currentUsageWatts").append(data.usedGauge);
+      $("#currentSolarWatts").append(data.solarGauge);
+      $("#currentGridWatts").append(data.meterGauge);
     }
   });
 }
@@ -47,7 +47,7 @@ updateCurrentEnergy();
 setInterval(function()
 {
   updateCurrentEnergy();
-}, 60000);
+}, 5000);
 
 
 jQuery.ajax({

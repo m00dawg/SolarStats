@@ -62,7 +62,20 @@ $app->group(['prefix' => 'v1'], function($app)
 
   $app->get('/usage/current', function()
   {
-    return response()->json(DB::select('SELECT * FROM UsageCurrent'));
+    $currentUsage = [];
+    $egaugeHost = '192.168.100.17';
+    $memcached = new Memcached();
+
+    $memcached->addServer('127.0.0.1', 11211);
+    $currentUsage['outsideTemperature'] = $memcached->get('SolarStats:outsideTemperature');
+    $memcached->quit();
+    $power = simplexml_load_file('http://'.$egaugeHost . '/cgi-bin/egauge?inst');
+    $currentUsage['usedGauge'] = $power->r[0]->i + $power->r[1]->i;
+    $currentUsage['meterGauge'] = (int)$power->r[0]->i;
+    $currentUsage['solarGauge'] = (int)$power->r[1]->i;
+
+    return response()->json($currentUsage);
+    //return response()->json(DB::select('SELECT * FROM UsageCurrent'));
   });
 
   $app->get('/usage/average', function()
