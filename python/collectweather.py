@@ -32,6 +32,7 @@ def convert_to_mb(pressure_Pa):
 # Process weather string
 def process_weather(string):
     global altitude
+    station_id = None
     humidity = None
     temperature = None
     pressure = None
@@ -39,6 +40,8 @@ def process_weather(string):
     light = None
     string = string.split(',')
     for chunk in string:
+        if chunk.startswith('stationID'):
+            station_id = split_value(chunk)
         if chunk.startswith('humidity'):
             humidity = split_value(chunk)
         if chunk.startswith('tempc'):
@@ -50,6 +53,8 @@ def process_weather(string):
         if chunk.startswith('light_lvl'):
             light = split_value(chunk)
 
+    if station_id:
+        print 'Station ID: {}'.format(station_id)
     if temperature:
         print 'Temperature: {}C'.format(temperature)
     if humidity > 0:
