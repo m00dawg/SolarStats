@@ -1,0 +1,17 @@
+[serial]
+port = /dev/ttyUSB1
+baudrate = 9600
+
+[wunderground]
+update = True
+station_id = KTXSANAN451
+password = TgNzCvZAHFc4H5vs61nJ
+altitude = 294
+
+[database]
+user = solarcollector
+password = enDEGTwujbaDB9yMU3wnwRJZ
+database = solar
+
+[debug]
+output = False
