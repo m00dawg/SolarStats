@@ -11,8 +11,9 @@
 #include "SparkFunMPL3115A2.h" //Pressure sensor
 #include "SparkFunHTU21D.h" //Humidity sensor
 
+// AVR Functions
+//#include <avr/interrupt.h>  // For rain, wind
 // Sleep Functions
-//#include <avr/interrupt.h>
 #include <avr/power.h>
 #include <avr/sleep.h>
 #include <avr/wdt.h>
@@ -20,28 +21,29 @@
 MPL3115A2 myPressure; //Create an instance of the pressure sensor
 HTU21D myHumidity; //Create an instance of the humidity sensor
 
-//Hardware pin definitions
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// digital I/O pins
+// I/O pins
 const byte WSPEED = 3;
 const byte RAIN = 2;
 const byte STAT1 = 7;
 const byte STAT2 = 8;
-
-// analog I/O pins
 const byte REFERENCE_3V3 = A3;
 const byte LIGHT = A1;
 const byte BATT = A2;
 const byte WDIR = A0;
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 
 // Other Constants
 // How many loops through sleep/wakeup to wait before we check sensors and transmit results
-//const int sleepCycles = 7;
-const int sleepCycles = 1;
+// Each cycle is ~ 8 seconds.
+const int sleepCycles = 7;
+//const int sleepCycles = 1;
+
+// A station identifier for if there are multiple sensors being used (e.g. indoor and outdoor)
+const byte stationID = 1;
 
 //Global Variables
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+/*
 long lastSecond; //The millis counter to see when a second rolls by
 byte seconds; //When it hits 60, increase the current minute
 byte seconds_2m; //Keeps track of the "wind speed/dir avg" over last 2 minutes array of data
@@ -51,6 +53,7 @@ byte minutes_10m; //Keeps track of where we are in wind gust/dir over last 10 mi
 long lastWindCheck = 0;
 volatile long lastWindIRQ = 0;
 volatile byte windClicks = 0;
+*/
 
 //We need to keep track of the following variables:
 //Wind speed/dir each update (no storage)
@@ -60,8 +63,9 @@ volatile byte windClicks = 0;
 //Rain over the past hour (store 1 per minute)
 //Total rain over date (store one per day)
 
-byte windspdavg[120]; //120 bytes to keep track of 2 minute average
+// byte windspdavg[120]; //120 bytes to keep track of 2 minute average
 
+/*
 #define WIND_DIR_AVG_SIZE 120
 int winddiravg[WIND_DIR_AVG_SIZE]; //120 ints to keep track of 2 minute average
 float windgust_10m[10]; //10 floats to keep track of 10 minute max
@@ -77,14 +81,14 @@ float windspdmph_avg2m = 0; // [mph 2 minute average wind speed mph]
 int winddir_avg2m = 0; // [0-360 2 minute average wind direction]
 float windgustmph_10m = 0; // [mph past 10 minutes wind gust mph ]
 int windgustdir_10m = 0; // [0-360 past 10 minutes wind gust direction]
+*/
 float humidity = 0; // [%]
-float tempf = 0; // [temperature F]
-float tempc = 0; // [temperature C]
-float rainin = 0; // [rain inches over the past hour)] -- the accumulated rainfall in the past 60 min
-volatile float dailyrainin = 0; // [rain inches so far today in local time]
-//float baromin = 30.03;// [barom in] - It's hard to calculate baromin locally, do this in the agent
-float pressure = 0;
-//float dewptf; // [dewpoint F] - It's hard to calculate dewpoint locally, do this in the agent
+//float tempf = 0; // [temperature F]
+float temperature = 0; // [temperature C]
+//float rainin = 0; // [rain inches over the past hour)] -- the accumulated rainfall in the past 60 min
+//volatile float dailyrainin = 0; // [rain inches so far today in local time]
+float pressure = 0; // Pressure in Pascals
+
 
 float batt_lvl = 11.8; //[analog value from 0 to 1023]
 float light_lvl = 455; //[analog value from 0 to 1023]
@@ -107,7 +111,7 @@ ISR(WDT_vect)
   }
   else
   {
-    Serial.println("WDT Overrun!!!");
+    //Serial.println("WDT Overrun!!!");
   }
 }
 
@@ -129,6 +133,7 @@ void enterSleep(void)
 
 //Interrupt routines (these are called by the hardware interrupts, not by the main code)
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+/*
 void rainIRQ()
 // Count rain gauge bucket tips as they occur
 // Activated by the magnet and reed switch in the rain gauge, attached to input D2
@@ -154,18 +159,14 @@ void wspeedIRQ()
 		windClicks++; //There is 1.492MPH for each click per second.
 	}
 }
-
+*/
 
 void setup()
 {
-	//Serial.begin(9600);
-  Serial.begin(115200);
-
-  //For Xbee PRO to bypass the bootloader
-  //Serial.write('\r');
-  //delay(2000);
+	Serial.begin(9600);
+  //Serial.begin(115200);
  
-	Serial.println("SolarWeather");
+	//Serial.println("SolarWeather");
 
 	//pinMode(STAT1, OUTPUT); //Status LED Blue
 	//pinMode(STAT2, OUTPUT); //Status LED Green
@@ -185,8 +186,8 @@ void setup()
 	//Configure the humidity sensor
 	myHumidity.begin();
 
-	seconds = 0;
-	lastSecond = millis();
+	//seconds = 0;
+	//lastSecond = millis();
 
 	// attach external interrupt pins to IRQ functions
 	//attachInterrupt(0, rainIRQ, FALLING);
@@ -196,26 +197,22 @@ void setup()
 	//interrupts();
 
  
-  /*** Setup the WDT ***/
-  
+  /*** Setup the WDT (For Sleeping) ***/
   /* Clear the reset flag. */
   MCUSR &= ~(1<<WDRF);
-  
   /* In order to change WDE or the prescaler, we need to
    * set WDCE (This will allow updates for 4 clock cycles).
    */
   WDTCSR |= (1<<WDCE) | (1<<WDE);
-
   /* set new watchdog timeout prescaler value */
   WDTCSR = 1<<WDP0 | 1<<WDP3; /* 8.0 seconds */
-  
   /* Enable the WD interrupt (note no reset). */
   WDTCSR |= _BV(WDIE);
 
-	Serial.println("Weather Shield online!");
+	//Serial.println("Weather Shield online!");
 
   // Hang out for a while in case we want to update the firmware before we start sleeping
-  Serial.println("Waiting 5 seconds for firmware update if desired");
+  //Serial.println("Waiting 5 seconds for firmware update if desired");
   delay(5000);
 }
 
@@ -272,6 +269,10 @@ void loop()
 	}
  */
 
+  // Skip sleeping
+  //printWeather();
+  //delay(2000);
+
   if(currentSleepCycle >= sleepCycles)
   {
     currentSleepCycle = 0;
@@ -279,10 +280,11 @@ void loop()
   }
   else
   {
-    Serial.println("DEBUG - Looping for Sleep Cycle");
+    //Serial.println("DEBUG - Looping for Sleep Cycle");
     ++currentSleepCycle;
   }
   delay(100);
+
   if(watchdog_flag == 1)
   {
     watchdog_flag = 0;
@@ -294,21 +296,23 @@ void loop()
 void calcWeather()
 {
 	//Calc winddir
-	winddir = get_wind_direction();
+	//winddir = get_wind_direction();
 
 	//Calc windspeed
-	windspeedmph = get_wind_speed();
+	//windspeedmph = get_wind_speed();
 
 	//Calc windgustmph
 	//Calc windgustdir
 	//These are calculated in the main loop
 
 	//Calc windspdmph_avg2m
+  /*
 	float temp = 0;
 	for(int i = 0 ; i < 120 ; i++)
 		temp += windspdavg[i];
 	temp /= 120.0;
 	windspdmph_avg2m = temp;
+  */
 
 	//Calc winddir_avg2m, Wind Direction
 	//You can't just take the average. Google "mean of circular quantities" for more info
@@ -316,6 +320,7 @@ void calcWeather()
 	//And because it sounds cool.
 	//Based on: http://abelian.org/vlf/bearings.html
 	//Based on: http://stackoverflow.com/questions/1813483/averaging-angles-again
+ /*
 	long sum = winddiravg[0];
 	int D = winddiravg[0];
 	for(int i = 1 ; i < WIND_DIR_AVG_SIZE ; i++)
@@ -349,6 +354,7 @@ void calcWeather()
 			windgustdir_10m = windgustdirection_10m[i];
 		}
 	}
+ */
 
 	//Calc humidity
 	humidity = myHumidity.readHumidity();
@@ -357,16 +363,16 @@ void calcWeather()
 	//Serial.print(temp_h, 2);
 
 	//Calc temps from pressure sensor
-	tempf = myPressure.readTempF();
-  tempc = myPressure.readTemp();
+	//tempf = myPressure.readTempF();
+  temperature = myPressure.readTemp();
 	//Serial.print(" TempP:");
 	//Serial.print(tempf, 2);
 
 	//Total rainfall for the day is calculated within the interrupt
 	//Calculate amount of rainfall for the last 60 minutes
-	rainin = 0;
-	for(int i = 0 ; i < 60 ; i++)
-		rainin += rainHour[i];
+	//rainin = 0;
+	//for(int i = 0 ; i < 60 ; i++)
+	//	rainin += rainHour[i];
 
 	//Calc pressure
 	pressure = myPressure.readPressure();
@@ -415,6 +421,7 @@ float get_battery_level()
 }
 
 //Returns the instataneous wind speed
+/*
 float get_wind_speed()
 {
 	float deltaTime = millis() - lastWindCheck; //750ms
@@ -430,7 +437,7 @@ float get_wind_speed()
 
 	/* Serial.println();
 	 Serial.print("Windspeed:");
-	 Serial.println(windSpeed);*/
+	 Serial.println(windSpeed);
 
 	return(windSpeed);
 }
@@ -464,7 +471,7 @@ int get_wind_direction()
 	if (adc < 990) return (270);
 	return (-1); // error, disconnected?
 }
-
+*/
 
 //Prints the various variables directly to the port
 //I don't like the way this function is written but Arduino doesn't support floats under sprintf
@@ -473,32 +480,34 @@ void printWeather()
 	calcWeather(); //Go calc all the various sensors
 
 	Serial.println();
-	Serial.print("$,winddir=");
-	Serial.print(winddir);
-	Serial.print(",windspeedmph=");
-	Serial.print(windspeedmph, 1);
-	Serial.print(",windgustmph=");
-	Serial.print(windgustmph, 1);
-	Serial.print(",windgustdir=");
-	Serial.print(windgustdir);
-	Serial.print(",windspdmph_avg2m=");
-	Serial.print(windspdmph_avg2m, 1);
-	Serial.print(",winddir_avg2m=");
-	Serial.print(winddir_avg2m);
-	Serial.print(",windgustmph_10m=");
-	Serial.print(windgustmph_10m, 1);
-	Serial.print(",windgustdir_10m=");
-	Serial.print(windgustdir_10m);
+	//Serial.print("$,winddir=");
+	//Serial.print(winddir);
+	//Serial.print(",windspeedmph=");
+	//Serial.print(windspeedmph, 1);
+	//Serial.print(",windgustmph=");
+	//Serial.print(windgustmph, 1);
+	//Serial.print(",windgustdir=");
+	//Serial.print(windgustdir);
+	//Serial.print(",windspdmph_avg2m=");
+	//Serial.print(windspdmph_avg2m, 1);
+	//Serial.print(",winddir_avg2m=");
+	//Serial.print(winddir_avg2m);
+	//Serial.print(",windgustmph_10m=");
+	//Serial.print(windgustmph_10m, 1);
+	//Serial.print(",windgustdir_10m=");
+	//Serial.print(windgustdir_10m);
+  Serial.print("$,stationID=");
+  Serial.print(stationID, 1);
 	Serial.print(",humidity=");
 	Serial.print(humidity, 1);
-	Serial.print(",tempf=");
-	Serial.print(tempf, 1);
- Serial.print(",tempc=");
- Serial.print(tempc, 1);
-	Serial.print(",rainin=");
-	Serial.print(rainin, 2);
-	Serial.print(",dailyrainin=");
-	Serial.print(dailyrainin, 2);
+	//Serial.print(",tempf=");
+	//Serial.print(tempf, 1);
+  Serial.print(",temperature=");
+  Serial.print(temperature, 1);
+	//Serial.print(",rainin=");
+	//Serial.print(rainin, 2);
+	//Serial.print(",dailyrainin=");
+	//Serial.print(dailyrainin, 2);
 	Serial.print(",pressure=");
 	Serial.print(pressure, 2);
 	Serial.print(",batt_lvl=");
@@ -507,5 +516,4 @@ void printWeather()
 	Serial.print(light_lvl, 2);
 	Serial.print(",");
 	Serial.println("#");
-
 }
