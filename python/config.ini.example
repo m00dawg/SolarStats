@@ -4,13 +4,13 @@ baudrate = 9600
 
 [wunderground]
 update = True
-station_id = KTXSANAN451
-password = TgNzCvZAHFc4H5vs61nJ
+station_id = station_id
+password = password
 altitude = 294
 
 [database]
 user = solarcollector
-password = enDEGTwujbaDB9yMU3wnwRJZ
+password = password
 database = solar
 
 [debug]
