@@ -497,13 +497,13 @@ void printWeather()
 	//Serial.print(",windgustdir_10m=");
 	//Serial.print(windgustdir_10m);
   Serial.print("$,stationID=");
-  Serial.print(stationID, 1);
+  Serial.print(stationID);
 	Serial.print(",humidity=");
 	Serial.print(humidity, 1);
 	//Serial.print(",tempf=");
 	//Serial.print(tempf, 1);
   Serial.print(",temperature=");
-  Serial.print(temperature, 1);
+  Serial.print(temperature, 2);
 	//Serial.print(",rainin=");
 	//Serial.print(rainin, 2);
 	//Serial.print(",dailyrainin=");

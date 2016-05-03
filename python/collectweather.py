@@ -111,10 +111,13 @@ def process_weather(string):
             'humidity': humidity,
             'baromin': convert_to_baromin(pressure)
         })
-        result = urllib.urlopen("http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?%s" % params)
-        if result.read() != 'success\n':
+        if output:
+            print params
+        url = urllib.urlopen("http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?%s" % params)
+        result = url.read()
+        if result != 'success\n':
             print "Error from Wunderground"
-            print result.read()
+            print result
     return
 
 while True:
