@@ -35,7 +35,7 @@ const byte WDIR = A0;
 // Other Constants
 // How many loops through sleep/wakeup to wait before we check sensors and transmit results
 // Each cycle is ~ 8 seconds.
-const int sleepCycles = 7;
+const int sleepCycles = 6;
 //const int sleepCycles = 1;
 
 // A station identifier for if there are multiple sensors being used (e.g. indoor and outdoor)
@@ -91,7 +91,8 @@ float pressure = 0; // Pressure in Pascals
 
 
 float batt_lvl = 11.8; //[analog value from 0 to 1023]
-float light_lvl = 455; //[analog value from 0 to 1023]
+//float light_lvl = 455; //[analog value from 0 to 1023]
+float light_lvl = 072; //[analog value from 0 to 1023]
 
 
 int currentSleepCycle = 0; //The sleep cycle we are on
@@ -176,6 +177,8 @@ void setup()
 
 	pinMode(REFERENCE_3V3, INPUT);
 	pinMode(LIGHT, INPUT);
+  pinMode(BATT, INPUT);
+  pinMode(REFERENCE_3V3, INPUT);
 
 	//Configure the pressure sensor
 	myPressure.begin(); // Get sensor online
@@ -270,8 +273,10 @@ void loop()
  */
 
   // Skip sleeping
-  //printWeather();
-  //delay(2000);
+  /*
+  printWeather();
+  delay(2000);
+  */
 
   if(currentSleepCycle >= sleepCycles)
   {
@@ -407,15 +412,15 @@ float get_light_level()
 //3.9K on the high side (R1), and 1K on the low side (R2)
 float get_battery_level()
 {
-	float operatingVoltage = analogRead(REFERENCE_3V3);
+	float operatingVoltage = averageAnalogRead(REFERENCE_3V3);
 
-	float rawVoltage = analogRead(BATT);
+	float rawVoltage = averageAnalogRead(BATT);
 
 	operatingVoltage = 3.30 / operatingVoltage; //The reference voltage is 3.3V
 
-	rawVoltage = operatingVoltage * rawVoltage; //Convert the 0 to 1023 int to actual voltage on BATT pin
+	rawVoltage *= operatingVoltage; //Convert the 0 to 1023 int to actual voltage on BATT pin
 
-	rawVoltage *= 4.90; //(3.9k+1k)/1k - multiple BATT voltage by the voltage divider to get actual system voltage
+	rawVoltage *= 4.90; //(3.9k+1k)/1k - multiply BATT voltage by the voltage divider to get actual system voltage
 
 	return(rawVoltage);
 }
@@ -516,4 +521,16 @@ void printWeather()
 	Serial.print(light_lvl, 2);
 	Serial.print(",");
 	Serial.println("#");
+}
+
+int averageAnalogRead(int pinToRead)
+{
+  byte numberOfReadings = 8;
+  unsigned int runningValue = 0;
+
+  for(int x = 0 ; x < numberOfReadings ; x++)
+    runningValue += analogRead(pinToRead);
+  runningValue /= numberOfReadings;
+
+  return(runningValue);
 }

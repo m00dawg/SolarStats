@@ -4,7 +4,8 @@ baudrate = 9600
 
 [wunderground]
 update = True
-station_id = station_id
+local_station_id = 1  # ID of Local Device
+station_id = XXXXXXXXXXX # ID of Wunderground Station
 password = password
 altitude = 294
 

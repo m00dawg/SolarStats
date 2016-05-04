@@ -28,12 +28,13 @@ line = []
 
 # Open some stuff
 port = serial.Serial(serial_port, baudrate)  # open se'rial port
-db_connection = mariadb.connect(user='solarcollector', password='enDEGTwujbaDB9yMU3wnwRJZ', database='solar')
+db_connection = mariadb.connect(user=config.get('database', 'user'),
+    password=config.get('database', 'password'),
+    database=config.get('database', 'database'))
 db_cursor = db_connection.cursor()
 
 ## Functions
-# Insert values into the database
-
+# Convert Celsius to Fahrenheit
 def temp_c_to_f(temperature):
     return 9.0/5.0 * float(temperature) + 32
 
@@ -44,16 +45,18 @@ def split_value(chunk):
 # Taken from https://learn.sparkfun.com/tutorials/weather-station-wirelessly-connected-to-wunderground
 def convert_to_baromin(pressure_Pa):
     global altitude
-    pressure_mb = float(pressure_Pa) / 100
-    part1 = pressure_mb - 0.3 # Part 1 of formula
-    part2 = 8.42288 / 100000.0
-    part3 = math.pow((pressure_mb - 0.3), 0.190284)
-    part4 = float(altitude) / part3
-    part5 = (1.0 + (part2 * part4))
-    part6 = math.pow(part5, (1.0/0.190284))
-    altimeter_setting_pressure_mb = part1 * part6 # Output is now in adjusted millibars
-    baromin = altimeter_setting_pressure_mb * 0.02953
-    return baromin
+    if pressure_Pa > 0:
+        pressure_mb = float(pressure_Pa) / 100
+        part1 = pressure_mb - 0.3 # Part 1 of formula
+        part2 = 8.42288 / 100000.0
+        part3 = math.pow((pressure_mb - 0.3), 0.190284)
+        part4 = float(altitude) / part3
+        part5 = (1.0 + (part2 * part4))
+        part6 = math.pow(part5, (1.0/0.190284))
+        altimeter_setting_pressure_mb = part1 * part6 # Output is now in adjusted millibars
+        baromin = altimeter_setting_pressure_mb * 0.02953
+        return baromin
+    return 0
     #return round(altimeter_setting_pressure_mb,2)
 
 # Process weather string
@@ -101,7 +104,7 @@ def process_weather(string):
             print 'Light Level: {} '.format(light)
         if battery > 0:
             print 'Battery: {} V'.format(battery)
-    if update_wunderground:
+    if update_wunderground and config.get('wunderground', 'local_station_id') == station_id:
         params = urllib.urlencode({
             'action': 'updateraw',
             'ID': wunderground_station_id,
@@ -109,7 +112,7 @@ def process_weather(string):
             'dateutc': 'now',
             'tempf': temp_c_to_f(temperature),
             'humidity': humidity,
-            'baromin': convert_to_baromin(pressure)
+            'baromin': convert_to_baromin(float(pressure))
         })
         if output:
             print params
@@ -127,6 +130,7 @@ while True:
         if c == '\n':
             serial_input = []
             if line[0] is '$':
+                print line
                 process_weather(line)
                 db_connection.commit()
             break
