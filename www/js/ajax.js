@@ -49,7 +49,6 @@ setInterval(function()
   updateCurrentEnergy();
 }, 5000);
 
-
 jQuery.ajax({
     type: "GET",
     url: "/api/v1/temperature/yesterday",

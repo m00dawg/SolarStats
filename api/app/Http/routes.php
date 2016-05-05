@@ -25,26 +25,28 @@ $app->group(['prefix' => 'v1'], function($app)
   {
       $memcached = new Memcached();
       $memcached->addServer('127.0.0.1', 11211);
-      $temperature = $memcached->get('SolarStats:outsideTemperature');
+      $temperature = $memcached->get('SolarStats:'.env("STATION_ID").':currentTemperature');
       $memcached->quit();
 
       if(!isset($temperature) || $temperature == '')
         $temperature = 'Unknown';
 
       $result = DB::select("SELECT
-        '$temperature' AS 'CurrentTemperature',
-        MIN(outsideTemperature) AS 'LowTemperature',
-        MAX(outsideTemperature) AS 'HighTemperature' FROM PowerUsage
-        WHERE logDate >= CONCAT(DATE(NOW()), ' 00:00:00') AND logDate <= NOW()");
+        ? AS 'CurrentTemperature',
+        MIN(temperature) AS 'LowTemperature',
+        MAX(temperature) AS 'HighTemperature' FROM WeatherReadings
+        WHERE logDate >= CONCAT(DATE(NOW()), ' 00:00:00') AND logDate <= NOW()
+        AND stationID = ?", [$temperature, env("STATION_ID")]);
       return response()->json($result);
   });
 
   $app->get('/temperature/yesterday', function()
   {
       $result = DB::select("SELECT
-        MIN(outsideTemperature) AS 'LowTemperature',
-        MAX(outsideTemperature) AS 'HighTemperature' FROM PowerUsage
-        WHERE logDate >= CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 1 day)), ' 00:00:00') AND logDate <= NOW()");
+        MIN(temperature) AS 'LowTemperature',
+        MAX(temperature) AS 'HighTemperature' FROM WeatherReadings
+        WHERE logDate >= CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 1 day)), ' 00:00:00') AND logDate <= NOW()
+        AND stationID = ?", [env("STATION_ID")]);
       return response()->json($result);
   });
 
@@ -55,20 +57,29 @@ $app->group(['prefix' => 'v1'], function($app)
       if($_GET['days'] > 0)
         $days = $_GET['days'];
 
-    return response()->json(DB::select('SELECT UNIX_TIMESTAMP(logDate) AS logDate, meterGauge, solarGauge, outsideTemperature
+    $power = DB::select('SELECT
+      UNIX_TIMESTAMP(logDate) AS logDate, meterGauge, solarGauge
       FROM PowerUsage
-      WHERE logDate >= DATE_SUB(NOW(), INTERVAL ? day)', [$days]));
+      WHERE logDate >= DATE_SUB(NOW(), INTERVAL ? day)', [$days]);
+    $weather = DB::select('SELECT
+      UNIX_TIMESTAMP(logDate) AS logDate, temperature
+      FROM WeatherReadings
+      WHERE logDate >= DATE_SUB(NOW(), INTERVAL ? day)
+      AND stationID = ?', [$days, env("STATION_ID")]);
+    return response()->json([
+      'Power' => $power,
+      'Weather' => $weather]);
   });
 
   $app->get('/usage/current', function()
   {
     $currentUsage = [];
-    $egaugeHost = '192.168.100.17';
-    $memcached = new Memcached();
+    $egaugeHost = env("EGAUGE_HOST");
+    //$memcached = new Memcached();
 
-    $memcached->addServer('127.0.0.1', 11211);
-    $currentUsage['outsideTemperature'] = $memcached->get('SolarStats:outsideTemperature');
-    $memcached->quit();
+    //$memcached->addServer('127.0.0.1', 11211);
+    //$currentUsage['outsideTemperature'] = $memcached->get('SolarStats:outsideTemperature');
+    //$memcached->quit();
     $power = simplexml_load_file('http://'.$egaugeHost . '/cgi-bin/egauge?inst');
     $currentUsage['usedGauge'] = $power->r[0]->i + $power->r[1]->i;
     $currentUsage['meterGauge'] = (int)$power->r[0]->i;
@@ -90,15 +101,35 @@ $app->group(['prefix' => 'v1'], function($app)
       case 'day':
       {
         if(isset($_GET['lastDays']))
-            $result = DB::select('SELECT * FROM UsageByDay
-              WHERE logDate >= DATE_SUB(NOW(), INTERVAL ? day)', [$_GET['lastDays']]);
+            $result = DB::select('SELECT UsageByDay.logDate AS logDate,
+              usedKWH,
+              meterKWH,
+              solarKWH,
+              lowTemperature,
+              avgTemperature,
+              highTemperature
+              FROM UsageByDay
+              JOIN WeatherReadingsByDay ON WeatherReadingsByDay.logDate = UsageByDay.logDate
+              WHERE WeatherReadingsByDay.stationID = ?
+              AND UsageByDay.logDate >= DATE_SUB(NOW(), INTERVAL ? day)',
+              [env("STATION_ID"), $_GET['lastDays']]);
         else
           $result = DB::select('SELECT * FROM UsageByDay');
         break;
       }
       case 'month':
       {
-        $result = DB::select('SELECT * FROM UsageByMonth');
+        $result = DB::select('SELECT
+          YEAR(UsageByDay.logDate) AS "Year",
+          MONTH(UsageByDay.logDate) AS "Month",
+          ROUND(SUM(meterKWH) + SUM(solarKWH), 3) AS "UsedKWH",
+          ROUND(SUM(meterKWH), 3) AS "GridKWH",
+          ROUND(SUM(solarKWH), 3) AS "SolarKWH",
+          ROUND(AVG(avgTemperature), 2) AS "AvgTemp"
+          FROM UsageByDay
+          JOIN WeatherReadingsByDay ON WeatherReadingsByDay.logDate = UsageByDay.logDate
+          WHERE WeatherReadingsByDay.stationID = ?
+          GROUP BY YEAR(UsageByDay.logDate), MONTH(UsageByDay.logDate)', [env("STATION_ID")]);
         break;
       }
       default:

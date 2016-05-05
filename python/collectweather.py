@@ -4,6 +4,7 @@ import math
 import urllib
 import ConfigParser
 import mysql.connector as mariadb
+import memcache
 
 # Read the configuration file
 config = ConfigParser.ConfigParser()
@@ -14,7 +15,8 @@ baudrate = config.getint('serial', 'baudrate')
 serial_port = config.get('serial' ,'port')
 
 # User Settings
-output = config.getboolean('debug', 'output')
+debug_output = config.getboolean('debug', 'output')
+debug_level = config.getint('debug', 'level')
 
 # Wunderground
 update_wunderground = config.getboolean('wunderground', 'update')
@@ -33,7 +35,33 @@ db_connection = mariadb.connect(user=config.get('database', 'user'),
     database=config.get('database', 'database'))
 db_cursor = db_connection.cursor()
 
+#mc = memcache.Client(['127.0.0.1:11211'], debug=0)
+memcached_host = config.get('memcache', 'host')
+memcached_port = config.get('memcache', 'port')
+mc = memcache.Client([memcached_host + ":" + memcached_port], debug=0)
+
 ## Functions
+# Update Wunderground
+def update_wunderground(tempf, humidity, baromin):
+    global debug_output;
+    params = urllib.urlencode({
+        'action': 'updateraw',
+        'ID': wunderground_station_id,
+        'PASSWORD': wunderground_password,
+        'dateutc': 'now',
+        'tempf': tempf,
+        'humidity': humidity,
+        'baromin': baromin,
+    })
+    if debug_output:
+        print params
+    url = urllib.urlopen("http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?%s" % params)
+    result = url.read()
+    if result != 'success\n':
+        print "Error from Wunderground"
+        print result
+
+
 # Convert Celsius to Fahrenheit
 def temp_c_to_f(temperature):
     return 9.0/5.0 * float(temperature) + 32
@@ -61,7 +89,7 @@ def convert_to_baromin(pressure_Pa):
 
 # Process weather string
 def process_weather(string):
-    global altitude, output, db_cursor, update_wunderground, wunderground_station_id
+    global altitude, debug_output, debug_level, db_cursor, update_wunderground, wunderground_station_id
     station_id = None
     humidity = None
     temperature = None
@@ -83,14 +111,24 @@ def process_weather(string):
         if chunk.startswith('light_lvl'):
             light = split_value(chunk)
     if station_id > 0 and temperature:
+        # Insert into memcache
+        if config.get('memcache', 'update'):
+            namespace = config.get('memcache', 'namespace')
+            mc.set(namespace + ":" + station_id + ":" + "currentTemperature", temperature)
+        # Insert into database
         try:
             db_cursor.execute("INSERT INTO WeatherReadings (stationID, temperature, pressure, humidity, battery) \
                 VALUES (%s, %s, %s, %s, %s)",
                 (station_id, temperature, pressure, humidity, battery))
-        except:
-            print "Exception in INSERT encountered! Continuing Anyway"
+        except Exception, e:
+            print "Exception in INSERT encountered!"
+            print "Continuing Anyway"
             pass
-    if output:
+        # Update Weather Underground (if applicable)
+        if update_wunderground and config.get('wunderground', 'local_station_id') == station_id:
+            update_wunderground(temp_c_to_f(temperature), humidity, convert_to_baromin(float(pressure)))
+
+    if debug_output and debug_level > 1:
         if station_id:
             print 'Station ID: {}'.format(station_id)
         if temperature:
@@ -104,23 +142,6 @@ def process_weather(string):
             print 'Light Level: {} '.format(light)
         if battery > 0:
             print 'Battery: {} V'.format(battery)
-    if update_wunderground and config.get('wunderground', 'local_station_id') == station_id:
-        params = urllib.urlencode({
-            'action': 'updateraw',
-            'ID': wunderground_station_id,
-            'PASSWORD': wunderground_password,
-            'dateutc': 'now',
-            'tempf': temp_c_to_f(temperature),
-            'humidity': humidity,
-            'baromin': convert_to_baromin(float(pressure))
-        })
-        if output:
-            print params
-        url = urllib.urlopen("http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?%s" % params)
-        result = url.read()
-        if result != 'success\n':
-            print "Error from Wunderground"
-            print result
     return
 
 while True:
@@ -130,7 +151,8 @@ while True:
         if c == '\n':
             serial_input = []
             if line[0] is '$':
-                print line
+                if debug_output and debug_level > 2:
+                    print line
                 process_weather(line)
                 db_connection.commit()
             break

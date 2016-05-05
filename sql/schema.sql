@@ -15,14 +15,24 @@ INSERT INTO PowerUsage VALUES (NOW(), 0, 0, 0, 0, 0, NULL);
 
 DROP TABLE IF EXISTS UsageByDay;
 CREATE TABLE UsageByDay(
-		logDate DATE,
-		meterKWH float NOT NULL DEFAULT '0',
-	  solarKWH float NOT NULL DEFAULT '0',
-		usedKWH float AS (meterKWH + solarKWH) VIRTUAL,
-		lowOutsideTemperature decimal(4,2) DEFAULT NULL,
-		avgOutsideTemperature decimal(4,2) DEFAULT NULL,
-		highOutsideTemperature decimal(4,2) DEFAULT NULL,
-		PRIMARY KEY (logDate)
+	logDate DATE,
+	meterKWH float NOT NULL DEFAULT '0',
+	solarKWH float NOT NULL DEFAULT '0',
+	usedKWH float AS (meterKWH + solarKWH) VIRTUAL,
+	lowOutsideTemperature decimal(4,2) DEFAULT NULL,
+	avgOutsideTemperature decimal(4,2) DEFAULT NULL,
+	highOutsideTemperature decimal(4,2) DEFAULT NULL,
+	PRIMARY KEY (logDate)
+)	ENGINE='InnoDB';
+
+DROP TABLE IF EXISTS WeatherReadingsByDay;
+CREATE TABLE WeatherReadingsByDay(
+	stationID TINYINT UNSIGNED NOT NULL,
+	logDate DATE,
+	lowTemperature decimal(4,2) DEFAULT NULL,
+	avgTemperature decimal(4,2) DEFAULT NULL,
+	highTemperature decimal(4,2) DEFAULT NULL,
+	PRIMARY KEY (stationID, logDate)
 )	ENGINE='InnoDB';
 
 DROP TRIGGER IF EXISTS CalcPowerUsageGauges;
@@ -71,22 +81,39 @@ CREATE TRIGGER CalcPowerUsageGauges BEFORE INSERT ON PowerUsage
 //
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS UpdateUsageByDay;
+DROP TRIGGER IF EXISTS UpdatePowerUsageByDay;
 DELIMITER //
-CREATE TRIGGER UpdateUsageByDay AFTER INSERT ON PowerUsage
+CREATE TRIGGER UpdatePowerUsageByDay AFTER INSERT ON PowerUsage
 	FOR EACH ROW
 	BEGIN
 		REPLACE INTO UsageByDay
-			(logDate, meterKWH, solarKWH, lowOutsideTemperature, avgOutsideTemperature, highOutsideTemperature)
+			(logDate, meterKWH, solarKWH)
 		SELECT
 			DATE(NOW()),
 			SUM(meterKWH),
-			SUM(solarKWH),
-			MIN(outsideTemperature),
-			ROUND(AVG(outsideTemperature), 2),
-			MAX(outsideTemperature)
+			SUM(solarKWH)
 		FROM PowerUsage
 		WHERE logDate > CONCAT(DATE(NOW()), ' 00:00:00');
+	END;
+//
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS UpdateWeatherReadingsByDay;
+DELIMITER //
+CREATE TRIGGER UpdateWeatherReadingsByDay AFTER INSERT ON WeatherReadings
+	FOR EACH ROW
+	BEGIN
+		REPLACE INTO WeatherReadingsByDay
+			(logDate, stationID, lowTemperature, avgTemperature, highTemperature)
+		SELECT
+			DATE(NOW()),
+			stationID,
+			MIN(temperature),
+			ROUND(AVG(temperature), 2),
+			MAX(temperature)
+		FROM WeatherReadings
+		WHERE logDate > CONCAT(DATE(NOW()), ' 00:00:00')
+		AND stationID = NEW.stationID;
 	END;
 //
 DELIMITER ;

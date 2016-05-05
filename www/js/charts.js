@@ -85,22 +85,22 @@ function displayUsageByDay(data, status, jqXHR)
   {
     $.each(data, function()
     {
-      var f = Math.round(this.avgOutsideTemperature * (9/5) + 32)
+      var f = Math.round(this.avgTemperature * (9/5) + 32)
       $("#dailyUsage").append(
         "<tr><td>" + this.logDate +
         "</td><td>" + this.usedKWH +
         "</td><td>" + this.meterKWH +
         "</td><td>" + this.solarKWH +
-        "</td><td>" + this.avgOutsideTemperature + "C (" + f + "F)" +
+        "</td><td>" + this.avgTemperature + "C (" + f + "F)" +
         "</td></tr>");
 
        day.push(this.logDate);
        usedKWH.push(parseInt(this.usedKWH));
        gridKWH.push(parseInt(this.meterKWH));
        solarKWH.push(parseInt(this.solarKWH));
-       avgTemp.push(parseInt(this.avgOutsideTemperature));
-       highTemp.push(parseInt(this.highOutsideTemperature));
-       lowTemp.push(parseInt(this.lowOutsideTemperature));
+       avgTemp.push(parseInt(this.avgTemperature));
+       highTemp.push(parseInt(this.highTemperature));
+       lowTemp.push(parseInt(this.lowTemperature));
 
        totalUsedKWH = totalUsedKWH + parseInt(this.usedKWH);
        totalGridKWH = totalGridKWH + parseInt(this.meterKWH);
@@ -275,11 +275,14 @@ function displayTodaysTimeseries(data, status, jqXHR)
   var solar = [];
   var temperature = [];
 
-  $.each(data, function()
+  $.each(data['Power'], function()
   {
      usage.push([this.logDate * millis, parseInt(this.meterGauge) + parseInt(this.solarGauge)]);
      solar.push([this.logDate * millis, parseInt(this.solarGauge)]);
-     temperature.push([this.logDate * millis, parseFloat(this.outsideTemperature)]);
+  });
+  $.each(data['Weather'], function()
+  {
+    temperature.push([this.logDate * millis, parseFloat(this.temperature)]);
   });
   drawUsageTimeseriesGraph(usage, solar, temperature, 'latestUsageGraph');
 }
