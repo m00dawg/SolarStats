@@ -56,12 +56,17 @@ def update_wunderground(tempf, humidity, baromin):
     })
     if debug_output:
         print params
-    url = urllib.urlopen("http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?%s" % params)
-    result = url.read()
-    if result != 'success\n':
-        print "Error from Wunderground"
-        print result
-
+    try:
+        url = urllib.urlopen("http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?%s" % params)
+        result = url.read()
+        if result != 'success\n':
+            print "Error from Wunderground"
+            print result
+    except Exception, e:
+        print "Exception in Wunderground GET"
+        print "Continuing Anyway"
+        print e
+        pass
 
 # Convert Celsius to Fahrenheit
 def temp_c_to_f(temperature):
@@ -117,14 +122,15 @@ def process_weather(string):
             namespace = config.get('memcache', 'namespace')
             mc.set(namespace + ":" + station_id + ":" + "currentTemperature", temperature)
         # Insert into database
-        try:
-            db_cursor.execute("INSERT INTO WeatherReadings (stationID, temperature, pressure, humidity, battery) \
-                VALUES (%s, %s, %s, %s, %s)",
-                (station_id, temperature, pressure, humidity, battery))
-        except Exception, e:
-            print "Exception in INSERT encountered!"
-            print "Continuing Anyway"
-            pass
+        if config.get('database', 'update'):
+            try:
+                db_cursor.execute("INSERT INTO WeatherReadings (stationID, temperature, pressure, humidity, battery) \
+                    VALUES (%s, %s, %s, %s, %s)",
+                    (station_id, temperature, pressure, humidity, battery))
+            except Exception, e:
+                print "Exception in INSERT encountered!"
+                print "Continuing Anyway"
+                pass
         # Update Weather Underground (if applicable)
         if update_wunderground and config.get('wunderground', 'local_station_id') == station_id:
             update_wunderground(temp_c_to_f(temperature), humidity, convert_to_baromin(float(pressure)))

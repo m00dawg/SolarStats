@@ -1,9 +1,9 @@
 /*
  * Solar Weather
- * Forked from Weather Shield Example (https://github.com/sparkfun/Weather_Shield) by Nathan Siedle
- * 
+ * Forked from Weather Shield Example (https://github.com/sparkfun/Wimp_Weather_Station) by Nathan Siedle
+ *
  * By Tim Soderstrom
- * 
+ *
  * Per the Weather Shield Example, this is also public domain.
  */
 
@@ -121,13 +121,13 @@ void enterSleep(void)
   //set_sleep_mode(SLEEP_MODE_PWR_SAVE);   /* EDIT: could also use SLEEP_MODE_PWR_DOWN for lowest power consumption. */
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);   /* EDIT: could also use SLEEP_MODE_PWR_DOWN for lowest power consumption. */
   sleep_enable();
-  
+
   /* Now enter sleep mode. */
   sleep_mode();
-  
+
   /* The program will continue from here after the WDT timeout*/
   sleep_disable(); /* First thing to do is disable sleep. */
-  
+
   /* Re-enable the peripherals. */
   power_all_enable();
 }
@@ -166,7 +166,7 @@ void setup()
 {
 	Serial.begin(9600);
   //Serial.begin(115200);
- 
+
 	//Serial.println("SolarWeather");
 
 	//pinMode(STAT1, OUTPUT); //Status LED Blue
@@ -199,7 +199,7 @@ void setup()
 	// turn on interrupts
 	//interrupts();
 
- 
+
   /*** Setup the WDT (For Sleeping) ***/
   /* Clear the reset flag. */
   MCUSR &= ~(1<<WDRF);
@@ -420,7 +420,7 @@ float get_battery_level()
 
 	rawVoltage *= operatingVoltage; //Convert the 0 to 1023 int to actual voltage on BATT pin
 
-	rawVoltage *= 4.90; //(3.9k+1k)/1k - multiply BATT voltage by the voltage divider to get actual system voltage
+	//rawVoltage *= 4.90; //(3.9k+1k)/1k - multiply BATT voltage by the voltage divider to get actual system voltage
 
 	return(rawVoltage);
 }
