@@ -2,6 +2,9 @@
 port = /dev/ttyUSB1
 baudrate = 9600
 
+[egauge]
+host = 192.168.x.y
+
 [wunderground]
 update = True
 local_station_id = 1  # ID of Local Device
@@ -10,9 +13,17 @@ password = password
 altitude = 294
 
 [database]
+update = True
 user = solarcollector
 password = password
 database = solar
 
+[memcache]
+update = True
+host = 127.0.0.1
+port = 11211
+namespace = SolarStats
+
 [debug]
 output = False
+level = 0
