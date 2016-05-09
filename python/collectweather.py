@@ -39,6 +39,7 @@ db_cursor.execute("SET SQL_MODE='TRADITIONAL'")
 #mc = memcache.Client(['127.0.0.1:11211'], debug=0)
 memcached_host = config.get('memcache', 'host')
 memcached_port = config.get('memcache', 'port')
+memcached_expiry = config.getint('memcache', 'expiry')
 mc = memcache.Client([memcached_host + ":" + memcached_port], debug=0)
 
 ## Functions
@@ -74,7 +75,11 @@ def temp_c_to_f(temperature):
 
 # Split a string by equals sign and return second result
 def split_value(chunk):
-    return chunk.split('=')[1]
+    try:
+        split = chunk.split('=')[1]
+    except e:
+        return None
+    return split
 
 # Taken from https://learn.sparkfun.com/tutorials/weather-station-wirelessly-connected-to-wunderground
 def convert_to_baromin(pressure_Pa):
@@ -116,11 +121,14 @@ def process_weather(string):
             battery = split_value(chunk)
         if chunk.startswith('light_lvl'):
             light = split_value(chunk)
-    if station_id > 0 and temperature:
+    if station_id > 0 and temperature > -273:
         # Insert into memcache
         if config.get('memcache', 'update'):
             namespace = config.get('memcache', 'namespace')
-            mc.set(namespace + ":" + station_id + ":" + "currentTemperature", temperature)
+            mc.set(namespace + ":" + station_id + ":" + "currentTemperature", temperature, memcached_expiry)
+            mc.set(namespace + ":" + station_id + ":" + "currentHumidity", humidity, memcached_expiry)
+            mc.set(namespace + ":" + station_id + ":" + "currentPressure", pressure, memcached_expiry)
+            mc.set(namespace + ":" + station_id + ":" + "currentBattery", battery, memcached_expiry)
         # Insert into database
         if config.get('database', 'update'):
             try:

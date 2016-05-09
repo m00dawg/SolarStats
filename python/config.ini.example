@@ -22,7 +22,9 @@ database = solar
 update = True
 host = 127.0.0.1
 port = 11211
+expiry = 600
 namespace = SolarStats
+
 
 [debug]
 output = False
