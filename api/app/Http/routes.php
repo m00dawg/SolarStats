@@ -51,7 +51,8 @@ $app->group(['prefix' => 'v1'], function($app)
       $result = DB::select("SELECT
         MIN(temperature) AS 'LowTemperature',
         MAX(temperature) AS 'HighTemperature' FROM WeatherReadings
-        WHERE logDate >= CONCAT(DATE(DATE_SUB(NOW(), INTERVAL 1 day)), ' 00:00:00') AND logDate <= NOW()
+        WHERE logDate >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 day), '%Y-%m-%d 00:00:00')
+        AND logDate < DATE_FORMAT(NOW(), '%Y-%m-%d 00:00:00')
         AND stationID = ?", [env("STATION_ID")]);
       return response()->json($result);
   });
