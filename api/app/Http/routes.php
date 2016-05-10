@@ -21,11 +21,14 @@ $app->group(['prefix' => 'v1'], function($app)
   DB::statement("SET time_zone='".env('APP_TIMEZONE')."'");
   DB::statement("SET SQL_MODE='TRADITIONAL'");
 
-  $app->get('/temperature/today', function()
+  $app->get('/weather/today', function()
   {
       $memcached = new Memcached();
       $memcached->addServer('127.0.0.1', 11211);
       $temperature = $memcached->get('SolarStats:'.env("STATION_ID").':currentTemperature');
+      $humidity = $memcached->get('SolarStats:'.env("STATION_ID").':currentHumidity');
+      $pressure = $memcached->get('SolarStats:'.env("STATION_ID").':currentPressure');
+      $battery = $memcached->get('SolarStats:'.env("STATION_ID").':currentBattery');
       $memcached->quit();
 
       if(!isset($temperature) || $temperature == '')
@@ -33,10 +36,13 @@ $app->group(['prefix' => 'v1'], function($app)
 
       $result = DB::select("SELECT
         ? AS 'CurrentTemperature',
+        ? AS 'CurrentHumidity',
+        ? AS 'CurrentPressure',
+        ? AS 'CurrentBattery',
         MIN(temperature) AS 'LowTemperature',
         MAX(temperature) AS 'HighTemperature' FROM WeatherReadings
         WHERE logDate >= CONCAT(DATE(NOW()), ' 00:00:00') AND logDate <= NOW()
-        AND stationID = ?", [$temperature, env("STATION_ID")]);
+        AND stationID = ?", [$temperature, $humidity, $pressure, $battery, env("STATION_ID")]);
       return response()->json($result);
   });
 
@@ -62,7 +68,7 @@ $app->group(['prefix' => 'v1'], function($app)
       FROM PowerUsage
       WHERE logDate >= DATE_SUB(NOW(), INTERVAL ? day)', [$days]);
     $weather = DB::select('SELECT
-      UNIX_TIMESTAMP(logDate) AS logDate, temperature
+      UNIX_TIMESTAMP(logDate) AS logDate, temperature, battery
       FROM WeatherReadings
       WHERE logDate >= DATE_SUB(NOW(), INTERVAL ? day)
       AND stationID = ?', [$days, env("STATION_ID")]);

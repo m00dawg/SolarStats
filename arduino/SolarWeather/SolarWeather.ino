@@ -8,6 +8,7 @@
  */
 
 #include <Wire.h> //I2C needed for sensors
+ #include <EEPROM.h> //To store station ID
 #include "SparkFunMPL3115A2.h" //Pressure sensor
 #include "SparkFunHTU21D.h" //Humidity sensor
 
@@ -22,10 +23,13 @@ MPL3115A2 myPressure; //Create an instance of the pressure sensor
 HTU21D myHumidity; //Create an instance of the humidity sensor
 
 // I/O pins
-const byte WSPEED = 3;
+//const byte WSPEED = 3;
 const byte RAIN = 2;
+const byte XBEE_SLEEP = 3;
 const byte STAT1 = 7;
 const byte STAT2 = 8;
+
+
 const byte REFERENCE_3V3 = A3;
 const byte LIGHT = A1;
 const byte BATT = A2;
@@ -168,9 +172,13 @@ void setup()
   //Serial.begin(115200);
 
 	//Serial.println("SolarWeather");
+  /*
+	pinMode(STAT1, OUTPUT); //Status LED Blue
+	pinMode(STAT2, OUTPUT); //Status LED Green
+  digitalWrite(STAT1, LOW);
+  digitalWrite(STAT2, LOW);
+  */
 
-	//pinMode(STAT1, OUTPUT); //Status LED Blue
-	//pinMode(STAT2, OUTPUT); //Status LED Green
 
 	//pinMode(WSPEED, INPUT_PULLUP); // input from wind meters windspeed sensor
 	//pinMode(RAIN, INPUT_PULLUP); // input from wind meters rain gauge sensor
@@ -178,7 +186,13 @@ void setup()
 	pinMode(REFERENCE_3V3, INPUT);
 	pinMode(LIGHT, INPUT);
   pinMode(BATT, INPUT);
-  pinMode(REFERENCE_3V3, INPUT);
+
+  /* Set Sleep Status for XBee and make sure it is awake */
+  //pinMode(XBEE_SLEEP, OUTPUT);
+  //digitalWrite(XBEE_SLEEP, LOW);
+  //digitalWrite(XBEE_SLEEP, HIGH); //FOR TESTING
+  //delay(1000);
+
 
 	//Configure the pressure sensor
 	myPressure.begin(); // Get sensor online
@@ -270,17 +284,19 @@ void loop()
 
 		digitalWrite(STAT1, LOW); //Turn off stat LED
 	}
- */
+*/
 
   // Skip sleeping
-  /*
-  printWeather();
-  delay(2000);
-  */
+  //digitalWrite(XBEE_SLEEP, HIGH); //FOR TESTING
+  //printWeather();
+  //delay(2000);
+//    digitalWrite(XBEE_SLEEP, LOW); //FOR TESTING
+
 
   if(currentSleepCycle >= sleepCycles)
   {
     currentSleepCycle = 0;
+    //Serial.println("Polling for weather");
     printWeather();
   }
   else

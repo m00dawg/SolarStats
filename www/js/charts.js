@@ -26,6 +26,14 @@ var solarColors =
   highlightStroke: "rgba(0,255,0,1)",
 };
 
+var batteryColors =
+{
+  fillColor: "rgba(0,0,0,0.5)",
+  strokeColor: "rgba(0,0,0,1)",
+  highlightFill: "rgba(0,0,0,1)",
+  highlightStroke: "rgba(0,0,0,1)",
+};
+
 var tempColors =
 {
   fillColor: "rgba(200,0,0,0.5)",
@@ -63,7 +71,6 @@ Highcharts.setOptions({
     useUTC: false,
   }
 })
-
 
 function displayUsageByDay(data, status, jqXHR)
 {
@@ -273,6 +280,7 @@ function displayTodaysTimeseries(data, status, jqXHR)
   var logInterval = []
   var usage = [];
   var solar = [];
+  var battery = [];
   var temperature = [];
 
   $.each(data['Power'], function()
@@ -283,11 +291,33 @@ function displayTodaysTimeseries(data, status, jqXHR)
   $.each(data['Weather'], function()
   {
     temperature.push([this.logDate * millis, parseFloat(this.temperature)]);
+    battery.push([this.logDate * millis, parseFloat(this.battery)]);
   });
-  drawUsageTimeseriesGraph(usage, solar, temperature, 'latestUsageGraph');
+  drawUsageTimeseriesGraph(usage, solar, temperature, battery, 'latestUsageGraph');
 }
 
-function drawUsageTimeseriesGraph(usage, solar, temperature, element)
+var showTemperature = true;
+var showBattery = false;
+$('#toggleTemperature').click(function () {
+    showTemperature = !showTemperature;
+    $('#latestUsageGraph').highcharts().series[2].update({
+        visible: showTemperature
+    });
+    $('#latestUsageGraph').highcharts().yAxis[1].update({
+        visible: showTemperature
+    });
+});
+$('#toggleBattery').click(function () {
+    showBattery = !showBattery;
+    $('#latestUsageGraph').highcharts().series[3].update({
+        visible: showBattery
+    });
+    $('#latestUsageGraph').highcharts().yAxis[2].update({
+        visible: showBattery
+    });
+});
+
+function drawUsageTimeseriesGraph(usage, solar, temperature, battery, element)
 {
   // Build the chart
   var UsageTimeseries = new Highcharts.Chart(
@@ -322,7 +352,22 @@ function drawUsageTimeseriesGraph(usage, solar, temperature, element)
         endOnTick: true,
         minPadding: 0.02,
         maxPadding: 0.02,
-        opposite: true
+        opposite: true,
+        visible: showTemperature,
+      },
+      {
+        title: {
+          text: 'Battery (V)',
+          style: {
+            color: batteryColors.fillColor,
+          }
+        },
+        startOnTick: true,
+        endOnTick: true,
+        minPadding: 0.02,
+        maxPadding: 0.02,
+        opposite: true,
+        visible: showBattery,
       },
     ],
     legend: {
@@ -355,6 +400,17 @@ function drawUsageTimeseriesGraph(usage, solar, temperature, element)
         lineWidth: 1.5,
         yAxis: 1,
         shadow: true,
+        visible: showTemperature,
+      },
+      {
+        type: 'spline',
+        name: 'Battery',
+        data: battery,
+        color: batteryColors.fillColor,
+        lineWidth: 1.5,
+        yAxis: 2,
+        shadow: true,
+        visible: showBattery,
       },
     ]
    });

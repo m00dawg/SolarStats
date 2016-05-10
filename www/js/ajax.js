@@ -2,18 +2,24 @@ function updateCurrentTemp()
 {
   jQuery.ajax({
     type: "GET",
-    url: "/api/v1/temperature/today",
+    url: "/api/v1/weather/today",
     contentType: "application/json",
     dataType: "json",
     success: function(data)
     {
       $("#currentTemperature").empty();
+      $("#currentHumidity").empty();
+      $("#currentPressure").empty();
+      $("#currentBattery").empty();
       $("#todayLowTemperature").empty();
       $("#todayHighTemperature").empty();
       var currentF = Math.round(data[0].CurrentTemperature * (9/5) + 32)
       var lowF = Math.round(data[0].LowTemperature * (9/5) + 32)
       var highF = Math.round(data[0].HighTemperature * (9/5) + 32)
       $("#currentTemperature").append(data[0].CurrentTemperature + "C (" + currentF + "F)");
+      $("#currentHumidity").append(data[0].CurrentHumidity);
+      $("#currentPressure").append(data[0].CurrentPressure / 100);
+      $("#currentBattery").append(data[0].CurrentBattery);
       $("#todayLowTemperature").append(data[0].LowTemperature + "C (" + lowF + "F)");
       $("#todayHighTemperature").append(data[0].HighTemperature + "C (" + highF + "F)");
     }
