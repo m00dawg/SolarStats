@@ -46,7 +46,7 @@ $app->group(['prefix' => 'v1'], function($app)
       return response()->json($result);
   });
 
-  $app->get('/temperature/yesterday', function()
+  $app->get('/weather/yesterday', function()
   {
       $result = DB::select("SELECT
         MIN(temperature) AS 'LowTemperature',
@@ -59,19 +59,33 @@ $app->group(['prefix' => 'v1'], function($app)
   $app->get('/usage/raw', function()
   {
     $days = 1;
+    $groupBy = 'GROUP BY UNIX_TIMESTAMP(logDate)';
     if(isset($_GET['days']))
       if($_GET['days'] > 0)
+      {
         $days = $_GET['days'];
-
-    $power = DB::select('SELECT
-      UNIX_TIMESTAMP(logDate) AS logDate, meterGauge, solarGauge
+        if($days > 30)
+          $groupBy = "GROUP BY ROUND(UNIX_TIMESTAMP(logDate), -4)";
+        else if($days > 5)
+          $groupBy = "GROUP BY ROUND(UNIX_TIMESTAMP(logDate), -3)";
+        else if($days > 3)
+          $groupBy = "GROUP BY ROUND(UNIX_TIMESTAMP(logDate), -2)";
+        else if($days > 1)
+          $groupBy = "GROUP BY ROUND(UNIX_TIMESTAMP(logDate), -1)";
+      }
+    $power = DB::select("SELECT
+      UNIX_TIMESTAMP(logDate) AS logDate,
+      AVG(meterGauge) AS meterGauge,
+      AVG(solarGauge) AS solarGauge
       FROM PowerUsage
-      WHERE logDate >= DATE_SUB(NOW(), INTERVAL ? day)', [$days]);
-    $weather = DB::select('SELECT
-      UNIX_TIMESTAMP(logDate) AS logDate, temperature, battery
+      WHERE logDate >= DATE_SUB(NOW(), INTERVAL ? day) $groupBy", [$days]);
+    $weather = DB::select("SELECT
+      UNIX_TIMESTAMP(logDate) AS logDate,
+      AVG(temperature) AS temperature,
+      AVG(battery) AS battery
       FROM WeatherReadings
       WHERE logDate >= DATE_SUB(NOW(), INTERVAL ? day)
-      AND stationID = ?', [$days, env("STATION_ID")]);
+      AND stationID = ? $groupBy", [$days, env("STATION_ID")]);
     return response()->json([
       'Power' => $power,
       'Weather' => $weather]);
@@ -130,8 +144,7 @@ $app->group(['prefix' => 'v1'], function($app)
           MONTH(UsageByDay.logDate) AS "Month",
           ROUND(SUM(meterKWH) + SUM(solarKWH), 3) AS "UsedKWH",
           ROUND(SUM(meterKWH), 3) AS "GridKWH",
-          ROUND(SUM(solarKWH), 3) AS "SolarKWH",
-          ROUND(AVG(avgTemperature), 2) AS "AvgTemp"
+          ROUND(SUM(solarKWH), 3) AS "SolarKWH"
           FROM UsageByDay
           JOIN WeatherReadingsByDay ON WeatherReadingsByDay.logDate = UsageByDay.logDate
           WHERE WeatherReadingsByDay.stationID = ?
@@ -148,7 +161,6 @@ $app->group(['prefix' => 'v1'], function($app)
     return response()->json($result);
   });
 
-
   $app->get('/usage/total', function()
   {
     $timeframe = 'today';
@@ -164,13 +176,14 @@ $app->group(['prefix' => 'v1'], function($app)
       }
       case 'thisMonth':
       {
-        $where = "logDate >= CONCAT(DATE_FORMAT(NOW(), '%Y-%m'), '-01 00:00:00')";
+        $where = "logDate >= DATE_FORMAT(NOW(), '%Y-%m-1 00:00:00')";
         break;
       }
       // Today
       default:
       {
-        $where = "logDate >= CONCAT(DATE(NOW()), ' 00:00:00')";
+        $where = "logDate >= DATE_FORMAT(NOW(), '%Y-%m-%d 00:00:00')";
+        //$where = "logDate >= CONCAT(DATE(NOW()), ' 00:00:00')";
         break;
       }
     }
@@ -178,8 +191,7 @@ $app->group(['prefix' => 'v1'], function($app)
       SELECT
         ROUND(SUM(meterKWH) + SUM(solarKWH), 3) AS 'UsedKWH',
         ROUND(SUM(meterKWH), 3) AS 'GridKWH',
-        ROUND(SUM(solarKWH), 3) AS 'SolarKWH',
-        ROUND(AVG(outsideTemperature), 2) AS 'OutsideTemp'
+        ROUND(SUM(solarKWH), 3) AS 'SolarKWH'
       FROM PowerUsage
       WHERE $where");
     $response = response()->json($result);

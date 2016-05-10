@@ -517,9 +517,7 @@ function drawSolarVsUsedPie(totalGridKWH, totalSolarKWH, element)
         plotBackgroundColor: null,
         plotBorderWidth: null,
         plotShadow: false,
-
         type: 'pie',
-
         renderTo: element,
     },
     plotOptions: {

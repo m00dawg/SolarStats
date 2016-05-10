@@ -57,7 +57,7 @@ setInterval(function()
 
 jQuery.ajax({
     type: "GET",
-    url: "/api/v1/temperature/yesterday",
+    url: "/api/v1/weather/yesterday",
     contentType: "application/json",
     dataType: "json",
     success: function(data)
@@ -115,7 +115,8 @@ jQuery.ajax({
 
 jQuery.ajax({
     type: "GET",
-    url: "/api/TodaysUsageByHour",
+    //url: "/api/TodaysUsageByHour",
+    url: "/api/v1/usage/total?timeframe=today",
     contentType: "application/json",
     dataType: "json",
     success: displayTodaysUsage,
