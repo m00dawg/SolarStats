@@ -34,6 +34,22 @@ var batteryColors =
   highlightStroke: "rgba(0,0,0,1)",
 };
 
+var humidityColors =
+{
+  fillColor: "rgba(0,0,200,0.5)",
+  strokeColor: "rgba(25,25,250,1)",
+  highlightFill: "rgba(25,25,255,1)",
+  highlightStroke: "rgba(0,0,255,1)",
+};
+
+var pressureColors =
+{
+  fillColor: "rgba(200,0,200,0.5)",
+  strokeColor: "rgba(250-,25,250,1)",
+  highlightFill: "rgba(255,25,255,1)",
+  highlightStroke: "rgba(255,0,255,1)",
+};
+
 var tempColors =
 {
   fillColor: "rgba(200,0,0,0.5)",
@@ -280,8 +296,11 @@ function displayTodaysTimeseries(data, status, jqXHR)
   var logInterval = []
   var usage = [];
   var solar = [];
-  var battery = [];
   var temperature = [];
+  var pressure = [];
+  var humidity = [];
+  var battery = [];
+
 
   $.each(data['Power'], function()
   {
@@ -291,12 +310,16 @@ function displayTodaysTimeseries(data, status, jqXHR)
   $.each(data['Weather'], function()
   {
     temperature.push([this.logDate * millis, parseFloat(this.temperature)]);
+    pressure.push([this.logDate * millis, parseFloat(this.pressure) / 100]);
+    humidity.push([this.logDate * millis, parseFloat(this.humidity)]);
     battery.push([this.logDate * millis, parseFloat(this.battery)]);
   });
-  drawUsageTimeseriesGraph(usage, solar, temperature, battery, 'latestUsageGraph');
+  drawUsageTimeseriesGraph(usage, solar, temperature, pressure, humidity, battery, 'latestUsageGraph');
 }
 
 var showTemperature = true;
+var showHumidity = false;
+var showPressure = false;
 var showBattery = false;
 $('#toggleTemperature').click(function () {
     showTemperature = !showTemperature;
@@ -307,17 +330,34 @@ $('#toggleTemperature').click(function () {
         visible: showTemperature
     });
 });
-$('#toggleBattery').click(function () {
-    showBattery = !showBattery;
+$('#togglePressure').click(function () {
+    showPressure = !showPressure;
     $('#latestUsageGraph').highcharts().series[3].update({
-        visible: showBattery
+        visible: showPressure
     });
     $('#latestUsageGraph').highcharts().yAxis[2].update({
+        visible: showPressure
+    });
+});
+$('#toggleHumidity').click(function () {
+    showHumidity = !showHumidity;
+    $('#latestUsageGraph').highcharts().series[4].update({
+        visible: showHumidity
+    });
+    $('#latestUsageGraph').highcharts().yAxis[3].update({
+        visible: showHumidity
+    });
+});
+$('#toggleBattery').click(function () {
+    showBattery = !showBattery;
+    $('#latestUsageGraph').highcharts().series[5].update({
+        visible: showBattery
+    });
+    $('#latestUsageGraph').highcharts().yAxis[4].update({
         visible: showBattery
     });
 });
-
-function drawUsageTimeseriesGraph(usage, solar, temperature, battery, element)
+function drawUsageTimeseriesGraph(usage, solar, temperature, pressure, humidity, battery, element)
 {
   // Build the chart
   var UsageTimeseries = new Highcharts.Chart(
@@ -354,6 +394,34 @@ function drawUsageTimeseriesGraph(usage, solar, temperature, battery, element)
         maxPadding: 0.02,
         opposite: true,
         visible: showTemperature,
+      },
+      {
+        title: {
+          text: 'Pressure (mb)',
+          style: {
+            color: pressureColors.fillColor,
+          }
+        },
+        startOnTick: true,
+        endOnTick: true,
+        minPadding: 0.02,
+        maxPadding: 0.02,
+        opposite: true,
+        visible: showPressure,
+      },
+      {
+        title: {
+          text: 'Humidity (%)',
+          style: {
+            color: humidityColors.fillColor,
+          }
+        },
+        startOnTick: true,
+        endOnTick: true,
+        minPadding: 0.02,
+        maxPadding: 0.02,
+        opposite: true,
+        visible: showHumidity,
       },
       {
         title: {
@@ -404,11 +472,31 @@ function drawUsageTimeseriesGraph(usage, solar, temperature, battery, element)
       },
       {
         type: 'spline',
+        name: 'Pressure',
+        data: pressure,
+        color: pressureColors.fillColor,
+        lineWidth: 1.5,
+        yAxis: 2,
+        shadow: true,
+        visible: showPressure,
+      },
+      {
+        type: 'spline',
+        name: 'Humidity',
+        data: humidity,
+        color: humidityColors.fillColor,
+        lineWidth: 1.5,
+        yAxis: 3,
+        shadow: true,
+        visible: showHumidity,
+      },
+      {
+        type: 'spline',
         name: 'Battery',
         data: battery,
         color: batteryColors.fillColor,
         lineWidth: 1.5,
-        yAxis: 2,
+        yAxis: 4,
         shadow: true,
         visible: showBattery,
       },

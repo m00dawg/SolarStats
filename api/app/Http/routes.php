@@ -83,6 +83,8 @@ $app->group(['prefix' => 'v1'], function($app)
     $weather = DB::select("SELECT
       UNIX_TIMESTAMP(logDate) AS logDate,
       AVG(temperature) AS temperature,
+      AVG(pressure) AS pressure,
+      AVG(humidity) AS humidity,
       AVG(battery) AS battery
       FROM WeatherReadings
       WHERE logDate >= DATE_SUB(NOW(), INTERVAL ? day)
