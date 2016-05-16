@@ -1,0 +1,8 @@
+TX radio needs to be set to:
+ATSM1 (Sleep Mode 1, Pin mode)
+ATD70 (Disable CTS flow control / Reset)z
+
+More info:
+http://www.fiz-ix.com/2012/11/low-power-xbee-sleep-mode-with-arduino-and-pin-hibernation/
+http://citizen-sensing.org/2013/08/xbee-sleeping/
+
