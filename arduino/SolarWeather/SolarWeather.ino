@@ -25,7 +25,7 @@ HTU21D myHumidity; //Create an instance of the humidity sensor
 // I/O pins
 //const byte WSPEED = 3;
 const byte RAIN = 2;
-const byte XBEE_SLEEP = 3;
+const byte XBEE_SLEEP = 6;
 const byte STAT1 = 7;
 const byte STAT2 = 8;
 
@@ -41,6 +41,11 @@ const byte WDIR = A0;
 // Each cycle is ~ 8 seconds.
 const int sleepCycles = 6;
 //const int sleepCycles = 1;
+// Delay to wait on XBee to wake up
+const bool xbeeSleep = true; // Whether or not to sleep the Xbee with the Arduino
+const int xbeeSleepDelay = 2000;
+
+
 
 // A station identifier for if there are multiple sensors being used (e.g. indoor and outdoor)
 const byte stationID = 1;
@@ -171,6 +176,19 @@ void setup()
 	Serial.begin(9600);
   //Serial.begin(115200);
 
+  //pinMode(WSPEED, INPUT_PULLUP); // input from wind meters windspeed sensor
+  //pinMode(RAIN, INPUT_PULLUP); // input from wind meters rain gauge sensor
+
+  pinMode(REFERENCE_3V3, INPUT);
+  pinMode(LIGHT, INPUT);
+  pinMode(BATT, INPUT);
+
+  /* Set Sleep Status for XBee and make sure it is awake */
+  pinMode(XBEE_SLEEP, OUTPUT);
+  digitalWrite(XBEE_SLEEP, LOW);
+  delay(xbeeSleepDelay);
+
+
 	//Serial.println("SolarWeather");
   /*
 	pinMode(STAT1, OUTPUT); //Status LED Blue
@@ -180,18 +198,6 @@ void setup()
   */
 
 
-	//pinMode(WSPEED, INPUT_PULLUP); // input from wind meters windspeed sensor
-	//pinMode(RAIN, INPUT_PULLUP); // input from wind meters rain gauge sensor
-
-	pinMode(REFERENCE_3V3, INPUT);
-	pinMode(LIGHT, INPUT);
-  pinMode(BATT, INPUT);
-
-  /* Set Sleep Status for XBee and make sure it is awake */
-  //pinMode(XBEE_SLEEP, OUTPUT);
-  //digitalWrite(XBEE_SLEEP, LOW);
-  //digitalWrite(XBEE_SLEEP, HIGH); //FOR TESTING
-  //delay(1000);
 
 
 	//Configure the pressure sensor
@@ -297,6 +303,11 @@ void loop()
   {
     currentSleepCycle = 0;
     //Serial.println("Polling for weather");
+    if(xbeeSleep)
+    {
+      digitalWrite(XBEE_SLEEP, LOW); // Wake XBee
+      delay(xbeeSleepDelay);
+    }
     printWeather();
   }
   else
@@ -309,6 +320,10 @@ void loop()
   if(watchdog_flag == 1)
   {
     watchdog_flag = 0;
+    if(xbeeSleep)
+    {
+      digitalWrite(XBEE_SLEEP, HIGH); // Sleep XBee
+    }
     enterSleep();
   }
 }
