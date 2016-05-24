@@ -71,7 +71,10 @@ def update_wunderground(tempf, humidity, baromin):
 
 # Convert Celsius to Fahrenheit
 def temp_c_to_f(temperature):
-    return 9.0/5.0 * float(temperature) + 32
+    tempf = 9.0/5.0 * float(temperature) + 32
+    if tempf > -500:
+        return tempf
+    return None
 
 # Split a string by equals sign and return second result
 def split_value(chunk):
