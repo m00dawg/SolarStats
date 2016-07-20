@@ -19,7 +19,6 @@ debug_output = config.getboolean('debug', 'output')
 debug_level = config.getint('debug', 'level')
 
 # Wunderground
-update_wunderground = config.getboolean('wunderground', 'update')
 wunderground_station_id = config.get('wunderground', 'station_id')
 wunderground_password = config.get('wunderground', 'password')
 altitude = config.getint('wunderground', 'altitude')
@@ -33,6 +32,7 @@ port = serial.Serial(serial_port, baudrate)  # open se'rial port
 db_connection = mariadb.connect(user=config.get('database', 'user'),
     password=config.get('database', 'password'),
     database=config.get('database', 'database'))
+db_connection.ping(True)
 db_cursor = db_connection.cursor()
 db_cursor.execute("SET SQL_MODE='TRADITIONAL'")
 
@@ -56,6 +56,7 @@ def update_wunderground(tempf, humidity, baromin):
         'baromin': baromin,
     })
     if debug_output:
+        print "Wunderground Parameter String:"
         print params
     try:
         url = urllib.urlopen("http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?%s" % params)
@@ -87,7 +88,7 @@ def split_value(chunk):
 # Taken from https://learn.sparkfun.com/tutorials/weather-station-wirelessly-connected-to-wunderground
 def convert_to_baromin(pressure_Pa):
     global altitude
-    if pressure_Pa > 0:
+    if pressure_Pa > 0.0:
         pressure_mb = float(pressure_Pa) / 100
         part1 = pressure_mb - 0.3 # Part 1 of formula
         part2 = 8.42288 / 100000.0
@@ -111,27 +112,37 @@ def process_weather(string):
     battery = None
     light = None
     string = string.split(',')
-    for chunk in string:
-        if chunk.startswith('stationID'):
-            station_id = split_value(chunk)
-        if chunk.startswith('humidity'):
-            humidity = split_value(chunk)
-        if chunk.startswith('temperature'):
-            temperature = split_value(chunk)
-        if chunk.startswith('pressure'):
-            pressure = split_value(chunk)
-        if chunk.startswith('batt_lvl'):
-            battery = split_value(chunk)
-        if chunk.startswith('light_lvl'):
-            light = split_value(chunk)
+    try:
+        for chunk in string:
+            if chunk.startswith('stationID'):
+                station_id = int(split_value(chunk))
+            if chunk.startswith('humidity'):
+                humidity = float(split_value(chunk))
+            if chunk.startswith('temperature'):
+                temperature = float(split_value(chunk))
+            if chunk.startswith('pressure'):
+                pressure = float(split_value(chunk))
+            if chunk.startswith('batt_lvl'):
+                battery = float(split_value(chunk))
+            if chunk.startswith('light_lvl'):
+                light = float(split_value(chunk))
+    except Exception, e:
+        print "Exception in splitting out string"
+        print "Ignoring"
+        pass
     if station_id > 0 and temperature > -273:
         # Insert into memcache
         if config.get('memcache', 'update'):
-            namespace = config.get('memcache', 'namespace')
-            mc.set(namespace + ":" + station_id + ":" + "currentTemperature", temperature, memcached_expiry)
-            mc.set(namespace + ":" + station_id + ":" + "currentHumidity", humidity, memcached_expiry)
-            mc.set(namespace + ":" + station_id + ":" + "currentPressure", pressure, memcached_expiry)
-            mc.set(namespace + ":" + station_id + ":" + "currentBattery", battery, memcached_expiry)
+            try:
+                namespace = config.get('memcache', 'namespace')
+                mc.set(namespace + ":" + str(station_id) + ":" + "currentTemperature", str(temperature), memcached_expiry)
+                mc.set(namespace + ":" + str(station_id) + ":" + "currentHumidity", str(humidity), memcached_expiry)
+                mc.set(namespace + ":" + str(station_id) + ":" + "currentPressure", str(pressure), memcached_expiry)
+                mc.set(namespace + ":" + str(station_id) + ":" + "currentBattery", str(battery), memcached_expiry)
+            except Exception, e:
+                print "Exception in memcache encountered!"
+                print "Continuing Anyway"
+                pass
         # Insert into database
         if config.get('database', 'update'):
             try:
@@ -143,8 +154,13 @@ def process_weather(string):
                 print "Continuing Anyway"
                 pass
         # Update Weather Underground (if applicable)
-        if update_wunderground and config.get('wunderground', 'local_station_id') == station_id:
-            update_wunderground(temp_c_to_f(temperature), humidity, convert_to_baromin(float(pressure)))
+        if config.getboolean('wunderground', 'update') and config.getint('wunderground', 'local_station_id') == station_id:
+            try:
+                update_wunderground(temp_c_to_f(temperature), humidity, convert_to_baromin(float(pressure)))
+            except Exception, e:
+                print "Exception in Wunderground encountered!"
+                print "Continuing Anyway"
+                pass
 
     if debug_output and debug_level > 1:
         if station_id:
@@ -172,7 +188,12 @@ while True:
                 if debug_output and debug_level > 2:
                     print line
                 process_weather(line)
-                db_connection.commit()
+                try:
+                    db_connection.commit()
+                except Exception, e:
+                    print "Exception in DB Commit Encountered!"
+                    print "Continuing Anyway"
+                pass
             break
 
 port.close()
