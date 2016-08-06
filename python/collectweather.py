@@ -151,6 +151,7 @@ def process_weather(string):
                     (station_id, temperature, pressure, humidity, battery))
             except Exception, e:
                 print "Exception in INSERT encountered!"
+                print e
                 print "Continuing Anyway"
                 pass
         # Update Weather Underground (if applicable)

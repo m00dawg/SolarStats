@@ -60,6 +60,7 @@ $app->group(['prefix' => 'v1'], function($app)
   $app->get('/usage/raw', function()
   {
     $days = 1;
+    //$stations = DB::select("SELECT stationID FROM WeatherStations")
     $groupBy = 'GROUP BY UNIX_TIMESTAMP(logDate)';
     if(isset($_GET['days']))
       if($_GET['days'] > 0)
@@ -132,9 +133,9 @@ $app->group(['prefix' => 'v1'], function($app)
               avgTemperature,
               highTemperature
               FROM UsageByDay
-              JOIN WeatherReadingsByDay ON WeatherReadingsByDay.logDate = UsageByDay.logDate
-              WHERE WeatherReadingsByDay.stationID = ?
-              AND UsageByDay.logDate >= DATE_SUB(NOW(), INTERVAL ? day)',
+              LEFT OUTER JOIN WeatherReadingsByDay ON WeatherReadingsByDay.logDate = UsageByDay.logDate
+                AND WeatherReadingsByDay.stationID = ?
+              WHERE UsageByDay.logDate >= DATE_SUB(NOW(), INTERVAL ? day)',
               [env("STATION_ID"), $_GET['lastDays']]);
         else
           $result = DB::select('SELECT * FROM UsageByDay');

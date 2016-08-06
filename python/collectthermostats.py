@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import ConfigParser
+import os
+import sys
 import mysql.connector as mariadb
 import radiotherm
 import time
@@ -7,7 +9,7 @@ import time
 
 # Read the configuration file
 config = ConfigParser.ConfigParser()
-config.read('config.ini')
+config.read(os.path.dirname(sys.argv[0]) + '/config.ini')
 
 # User Settings
 debug_output = config.getboolean('debug', 'output')
@@ -19,24 +21,31 @@ polling_interval = config.getint('thermostats', 'polling_interval')
 #memcached_expiry = config.getint('memcache', 'expiry')
 #mc = memcache.Client([memcached_host + ":" + memcached_port], debug=0)
 
+# Convert Fahrenheit to Celsius
+def temp_f_to_c(temperature):
+    return (temperature - 32) * (5.0/9.0)
+
 ## Functions
-def collect_thermostats(station_id, ip):
+def collect_thermostats(station_id, ip, temperature_scale):
     try:
         if debug_output:
             print "IP: " + ip
         ct80 = radiotherm.thermostat.CT80(ip)
-        temp = ct80.temp['raw']
-        humidity = ct80.humidity['raw']
+        humidity = round(ct80.humidity['raw'])
+        if temperature_scale == 'Fahrenheit':
+            temp = round(temp_f_to_c(ct80.temp['raw']),2)
+        else:
+            temp = ct80.temp['raw']
         if debug_output:
             print "Temperature: " + str(temp)
             print "Humidity: " + str(humidity)
         db_cursor.execute("INSERT INTO WeatherReadings (stationID, temperature, humidity) \
             VALUES (%s, %s, %s)",
-            (station_id, temp, round(humidity)))
+            (station_id, temp, humidity))
     except Exception, e:
         print e
 
-while True:
+#while True:
     db_connection = mariadb.connect(user=config.get('database', 'user'),
         password=config.get('database', 'password'),
         database=config.get('database', 'database'))
@@ -45,13 +54,15 @@ while True:
     db_cursor.execute("SET SQL_MODE='TRADITIONAL'")
     collect_thermostats(
         config.getint('downstairs_thermostat', 'station_id'),
-        config.get('downstairs_thermostat', 'ip'))
+        config.get('downstairs_thermostat', 'ip'),
+        config.get('downstairs_thermostat', 'temperature_scale'))
     collect_thermostats(
         config.getint('upstairs_thermostat', 'station_id'),
-        config.get('upstairs_thermostat', 'ip'))
+        config.get('upstairs_thermostat', 'ip'),
+        config.get('downstairs_thermostat', 'temperature_scale'))
     db_connection.commit()
     db_cursor.close()
     db_connection.close()
-    if debug_output and debug_level > 2:
-        print "Sleeping for " + str(polling_interval) + " seconds"
-    time.sleep(polling_interval)
+#    if debug_output and debug_level > 2:
+#        print "Sleeping for " + str(polling_interval) + " seconds"
+#    time.sleep(polling_interval)
