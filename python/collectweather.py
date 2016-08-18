@@ -29,7 +29,8 @@ line = []
 
 # Open some stuff
 port = serial.Serial(serial_port, baudrate)  # open se'rial port
-db_connection = mariadb.connect(user=config.get('database', 'user'),
+db_connection = mariadb.connect(host=config.get('database', 'host'),
+    user=config.get('database', 'user'),
     password=config.get('database', 'password'),
     database=config.get('database', 'database'))
 db_connection.ping(True)
