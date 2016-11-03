@@ -29,13 +29,6 @@ line = []
 
 # Open some stuff
 port = serial.Serial(serial_port, baudrate)  # open se'rial port
-db_connection = mariadb.connect(host=config.get('database', 'host'),
-    user=config.get('database', 'user'),
-    password=config.get('database', 'password'),
-    database=config.get('database', 'database'))
-db_connection.ping(True)
-db_cursor = db_connection.cursor()
-db_cursor.execute("SET SQL_MODE='TRADITIONAL'")
 
 #mc = memcache.Client(['127.0.0.1:11211'], debug=0)
 memcached_host = config.get('memcache', 'host')
@@ -189,6 +182,13 @@ while True:
             if line[0] is '$':
                 if debug_output and debug_level > 2:
                     print line
+                db_connection = mariadb.connect(host=config.get('database', 'host'),
+                    user=config.get('database', 'user'),
+                    password=config.get('database', 'password'),
+                    database=config.get('database', 'database'))
+                db_connection.ping(True)
+                db_cursor = db_connection.cursor()
+                db_cursor.execute("SET SQL_MODE='TRADITIONAL'")
                 process_weather(line)
                 try:
                     db_connection.commit()
@@ -196,8 +196,7 @@ while True:
                     print "Exception in DB Commit Encountered!"
                     print "Continuing Anyway"
                 pass
+                db_cursor.close()
+                db_connection.close()
             break
-
 port.close()
-db_cursor.close()
-db_connection.close()
