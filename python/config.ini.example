@@ -19,6 +19,13 @@ user = solarcollector
 password = password
 database = solar
 
+[influx]
+host = localhost
+port = 8086
+user = username
+password = password
+db = database
+
 [memcache]
 update = True
 host = 127.0.0.1

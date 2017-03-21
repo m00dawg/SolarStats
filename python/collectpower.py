@@ -4,6 +4,7 @@ import os
 import urllib
 import ConfigParser
 import mysql.connector as mariadb
+from influxdb import InfluxDBClient
 import xml.etree.ElementTree as ET
 import urllib
 #import memcache
@@ -23,6 +24,28 @@ solar = root[2][0].text
 url.close()
 
 
+# Insert info Influx
+influx = InfluxDBClient(config.get('influx', 'host'),
+                        config.get('influx', 'port'),
+                        config.get('influx', 'user'),
+                        config.get('influx', 'password'),
+                        config.get('influx', 'db'),
+                        )
+
+json_body = [
+    {
+        "measurement": "Power",
+        "fields": {
+            "grid": grid,
+            "solar": solar,
+        }
+    }
+]
+
+print("Write points: {0}".format(json_body))
+influx.write_points(json_body)
+
+# Insert into MySQL
 # Open DB Connection
 db_connection = mariadb.connect(user=config.get('database', 'user'),
     password=config.get('database', 'password'),
