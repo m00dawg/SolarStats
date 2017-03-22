@@ -7,6 +7,7 @@ import mysql.connector as mariadb
 from influxdb import InfluxDBClient
 import xml.etree.ElementTree as ET
 import urllib
+import datetime
 #import memcache
 # Read the configuration file
 config = ConfigParser.ConfigParser()
@@ -35,14 +36,15 @@ influx = InfluxDBClient(config.get('influx', 'host'),
 json_body = [
     {
         "measurement": "Power",
+        #"time": datetime.datetime.utcnow(),
         "fields": {
-            "grid": grid,
-            "solar": solar,
+            "grid": int(grid),
+            "solar": int(solar),
         }
     }
 ]
 
-print("Write points: {0}".format(json_body))
+#print("Write points: {0}".format(json_body))
 influx.write_points(json_body)
 
 # Insert into MySQL
